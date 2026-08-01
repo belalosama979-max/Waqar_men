@@ -1,75 +1,148 @@
-import { db } from './schema';
+import { supabase } from '@/lib/supabase';
 import type { Student } from '@/types';
+
+// ─── Mappers ────────────────────────────────────────────────────────────────
+
+function mapStudent(row: Record<string, unknown>): Student {
+  return {
+    id: row.id as number,
+    name: row.name as string,
+    teacherId: row.teacher_id as number,
+    teacherName: row.teacher_name as string | undefined,
+    totalPoints: (row.total_points as number) ?? 0,
+    lastRecitation: row.last_recitation as string | null,
+    lastDate: row.last_date ? new Date(row.last_date as string) : null,
+    createdAt: new Date(row.created_at as string),
+    updatedAt: new Date(row.updated_at as string),
+  };
+}
+
+// ─── Repository ─────────────────────────────────────────────────────────────
 
 export const studentsRepository = {
   async getAll(): Promise<Student[]> {
-    return db.students.toArray();
+    const { data, error } = await supabase
+      .from('students')
+      .select('*')
+      .order('total_points', { ascending: false });
+    if (error) throw error;
+    return (data || []).map(mapStudent);
   },
 
   async getById(id: number): Promise<Student | undefined> {
-    return db.students.get(id);
+    const { data, error } = await supabase
+      .from('students')
+      .select('*')
+      .eq('id', id)
+      .single();
+    if (error) return undefined;
+    return mapStudent(data);
   },
 
   async getByTeacherId(teacherId: number): Promise<Student[]> {
-    return db.students.where('teacherId').equals(teacherId).toArray();
-  },
-
-  async add(data: Omit<Student, 'id'>): Promise<number> {
-    return db.students.add(data) as Promise<number>;
-  },
-
-  async update(id: number, data: Partial<Student>): Promise<void> {
-    await db.students.update(id, { ...data, updatedAt: new Date() });
-  },
-
-  async delete(id: number): Promise<void> {
-    await db.recitations.where('studentId').equals(id).delete();
-    await db.students.delete(id);
-  },
-
-  async transferToTeacher(studentId: number, newTeacherId: number, newTeacherName: string): Promise<void> {
-    await db.students.update(studentId, {
-      teacherId: newTeacherId,
-      teacherName: newTeacherName,
-      updatedAt: new Date(),
-    });
-  },
-
-  async updatePoints(studentId: number, pointsDelta: number, lastRecitation: string, lastDate: Date): Promise<void> {
-    const student = await db.students.get(studentId);
-    if (!student) return;
-    await db.students.update(studentId, {
-      totalPoints: (student.totalPoints || 0) + pointsDelta,
-      lastRecitation,
-      lastDate,
-      updatedAt: new Date(),
-    });
+    const { data, error } = await supabase
+      .from('students')
+      .select('*')
+      .eq('teacher_id', teacherId)
+      .order('total_points', { ascending: false });
+    if (error) throw error;
+    return (data || []).map(mapStudent);
   },
 
   async getLeaderboard(teacherId?: number): Promise<Student[]> {
-    let collection = teacherId
-      ? db.students.where('teacherId').equals(teacherId)
-      : db.students.toCollection();
-    const students = await collection.toArray();
-    return students.sort((a, b) => b.totalPoints - a.totalPoints);
+    let query = supabase
+      .from('students')
+      .select('*')
+      .order('total_points', { ascending: false });
+    if (teacherId) {
+      query = query.eq('teacher_id', teacherId);
+    }
+    const { data, error } = await query;
+    if (error) throw error;
+    return (data || []).map(mapStudent);
+  },
+
+  async add(student: Omit<Student, 'id'>): Promise<number> {
+    const { data, error } = await supabase
+      .from('students')
+      .insert({
+        name: student.name,
+        teacher_id: student.teacherId,
+        teacher_name: student.teacherName,
+        total_points: student.totalPoints ?? 0,
+        last_recitation: student.lastRecitation,
+        last_date: student.lastDate?.toISOString() ?? null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .select('id')
+      .single();
+    if (error) throw error;
+    return data.id as number;
+  },
+
+  async update(id: number, changes: Partial<Student>): Promise<void> {
+    const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
+    if (changes.name !== undefined) patch.name = changes.name;
+    if (changes.teacherId !== undefined) patch.teacher_id = changes.teacherId;
+    if (changes.teacherName !== undefined) patch.teacher_name = changes.teacherName;
+    if (changes.totalPoints !== undefined) patch.total_points = changes.totalPoints;
+    if (changes.lastRecitation !== undefined) patch.last_recitation = changes.lastRecitation;
+    if (changes.lastDate !== undefined) patch.last_date = changes.lastDate?.toISOString() ?? null;
+
+    const { error } = await supabase
+      .from('students')
+      .update(patch)
+      .eq('id', id);
+    if (error) throw error;
+  },
+
+  async transferToTeacher(studentId: number, teacherId: number, teacherName: string): Promise<void> {
+    const { error } = await supabase
+      .from('students')
+      .update({
+        teacher_id: teacherId,
+        teacher_name: teacherName,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', studentId);
+    if (error) throw error;
+  },
+
+  async delete(id: number): Promise<void> {
+    const { error } = await supabase
+      .from('students')
+      .delete()
+      .eq('id', id);
+    if (error) throw error;
   },
 
   async count(teacherId?: number): Promise<number> {
-    if (teacherId) {
-      return db.students.where('teacherId').equals(teacherId).count();
-    }
-    return db.students.count();
+    let query = supabase.from('students').select('*', { count: 'exact', head: true });
+    if (teacherId) query = query.eq('teacher_id', teacherId);
+    const { count, error } = await query;
+    if (error) return 0;
+    return count ?? 0;
   },
 
-  async search(query: string, teacherId?: number): Promise<Student[]> {
-    const all = teacherId
-      ? await db.students.where('teacherId').equals(teacherId).toArray()
-      : await db.students.toArray();
-    const lower = query.toLowerCase();
-    return all.filter(
-      (s) =>
-        s.name.toLowerCase().includes(lower) ||
-        (s.teacherName || '').toLowerCase().includes(lower)
-    );
+  async addPoints(studentId: number, points: number, surahName: string, date: Date): Promise<void> {
+    // Fetch current total first
+    const { data: current } = await supabase
+      .from('students')
+      .select('total_points')
+      .eq('id', studentId)
+      .single();
+    const newTotal = ((current?.total_points as number) ?? 0) + points;
+
+    const { error } = await supabase
+      .from('students')
+      .update({
+        total_points: newTotal,
+        last_recitation: surahName,
+        last_date: date.toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', studentId);
+    if (error) throw error;
   },
 };

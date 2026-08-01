@@ -7,7 +7,7 @@ import { seedDatabase } from '@/lib/db';
 export function Providers({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Initialize DB with seed data on first load
-    seedDatabase().catch(console.error);
+    seedDatabase.init().catch(console.error);
   }, []);
 
   return (

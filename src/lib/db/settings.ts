@@ -1,34 +1,27 @@
-import { db } from './schema';
-import type { AppSettings } from '@/types';
+import { supabase } from '@/lib/supabase';
+import { SETTINGS_KEYS } from '@/lib/constants';
 
 export const settingsRepository = {
-  async get(key: string): Promise<string | null> {
-    const setting = await db.settings.where('key').equals(key).first();
-    return setting ? setting.value : null;
+  async get(key: string): Promise<string | undefined> {
+    const { data, error } = await supabase.from('settings').select('value').eq('key', key).single();
+    if (error || !data) return undefined;
+    return data.value;
   },
 
   async set(key: string, value: string): Promise<void> {
-    const existing = await db.settings.where('key').equals(key).first();
-    if (existing && existing.id) {
-      await db.settings.update(existing.id, { value });
-    } else {
-      await db.settings.add({ key, value });
-    }
-  },
-
-  async getAll(): Promise<AppSettings[]> {
-    return db.settings.toArray();
+    const { error } = await supabase.from('settings').upsert({ key, value }, { onConflict: 'key' });
+    if (error) throw error;
   },
 
   async getEvaluationPoints(): Promise<Record<string, number>> {
-    const all = await db.settings.toArray();
+    const { data, error } = await supabase.from('settings').select('*').like('key', 'eval_%');
+    if (error) return {};
+    
     const result: Record<string, number> = {};
-    for (const s of all) {
-      if (s.key.startsWith('eval_')) {
-        const evalKey = s.key.replace('eval_', '');
-        result[evalKey] = Number(s.value);
-      }
-    }
+    (data || []).forEach((row) => {
+      const evalKey = (row.key as string).replace('eval_', '');
+      result[evalKey] = parseInt(row.value as string, 10);
+    });
     return result;
   },
 };

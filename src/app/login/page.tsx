@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { BookOpen, Lock, User, Eye, EyeOff, ChevronDown } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
-import { teachersRepository } from '@/lib/db';
+import { teachersRepository, adminRepository } from '@/lib/db';
 import { ADMIN_USERNAME, ADMIN_PASSWORD, ADMIN_NAME } from '@/lib/constants';
 import type { Teacher } from '@/types';
 
@@ -39,8 +39,9 @@ export default function LoginPage() {
 
     try {
       if (loginMode === 'admin') {
-        if (adminUsername === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
-          login({ id: 0, name: ADMIN_NAME, role: 'admin', username: ADMIN_USERNAME });
+        const isValid = await adminRepository.verifyAdmin(adminUsername, password);
+        if (isValid) {
+          login({ id: 0, name: ADMIN_NAME, role: 'admin', username: adminUsername });
           toast.success('مرحباً بك يا مشرف! 🌟');
           router.push('/admin');
         } else {

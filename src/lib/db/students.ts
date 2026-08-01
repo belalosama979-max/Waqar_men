@@ -1,8 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import type { Student } from '@/types';
 
-// ─── Mappers ────────────────────────────────────────────────────────────────
-
 function mapStudent(row: Record<string, unknown>): Student {
   return {
     id: row.id as number,
@@ -12,54 +10,80 @@ function mapStudent(row: Record<string, unknown>): Student {
     totalPoints: (row.total_points as number) ?? 0,
     lastRecitation: row.last_recitation as string | null,
     lastDate: row.last_date ? new Date(row.last_date as string) : null,
-    createdAt: new Date(row.created_at as string),
-    updatedAt: new Date(row.updated_at as string),
+    createdAt: new Date((row.created_at as string) || Date.now()),
+    updatedAt: new Date((row.updated_at as string) || Date.now()),
   };
 }
 
-// ─── Repository ─────────────────────────────────────────────────────────────
-
 export const studentsRepository = {
   async getAll(): Promise<Student[]> {
-    const { data, error } = await supabase
-      .from('students')
-      .select('*')
-      .order('total_points', { ascending: false });
-    if (error) throw error;
-    return (data || []).map(mapStudent);
+    try {
+      const { data, error } = await supabase
+        .from('students')
+        .select('*')
+        .order('total_points', { ascending: false });
+      if (error) {
+        console.warn('Supabase students error:', error.message);
+        return [];
+      }
+      return (data || []).map(mapStudent);
+    } catch (err) {
+      console.warn('Students fetch error:', err);
+      return [];
+    }
   },
 
   async getById(id: number): Promise<Student | undefined> {
-    const { data, error } = await supabase
-      .from('students')
-      .select('*')
-      .eq('id', id)
-      .single();
-    if (error) return undefined;
-    return mapStudent(data);
+    try {
+      const { data, error } = await supabase
+        .from('students')
+        .select('*')
+        .eq('id', id)
+        .single();
+      if (error || !data) return undefined;
+      return mapStudent(data);
+    } catch {
+      return undefined;
+    }
   },
 
   async getByTeacherId(teacherId: number): Promise<Student[]> {
-    const { data, error } = await supabase
-      .from('students')
-      .select('*')
-      .eq('teacher_id', teacherId)
-      .order('total_points', { ascending: false });
-    if (error) throw error;
-    return (data || []).map(mapStudent);
+    try {
+      const { data, error } = await supabase
+        .from('students')
+        .select('*')
+        .eq('teacher_id', teacherId)
+        .order('total_points', { ascending: false });
+      if (error) {
+        console.warn('Supabase students by teacher error:', error.message);
+        return [];
+      }
+      return (data || []).map(mapStudent);
+    } catch (err) {
+      console.warn('Students by teacher fetch error:', err);
+      return [];
+    }
   },
 
   async getLeaderboard(teacherId?: number): Promise<Student[]> {
-    let query = supabase
-      .from('students')
-      .select('*')
-      .order('total_points', { ascending: false });
-    if (teacherId) {
-      query = query.eq('teacher_id', teacherId);
+    try {
+      let query = supabase
+        .from('students')
+        .select('*')
+        .order('total_points', { ascending: false });
+      if (teacherId) {
+        query = query.eq('teacher_id', teacherId);
+      }
+      const { data, error } = await query;
+      if (error) {
+        console.warn('Supabase leaderboard error:', error.message);
+        return [];
+      }
+      return (data || []).map(mapStudent);
+    } catch (err) {
+      console.warn('Leaderboard fetch error:', err);
+      return [];
     }
-    const { data, error } = await query;
-    if (error) throw error;
-    return (data || []).map(mapStudent);
   },
 
   async add(student: Omit<Student, 'id'>): Promise<number> {
@@ -77,7 +101,7 @@ export const studentsRepository = {
       })
       .select('id')
       .single();
-    if (error) throw error;
+    if (error) throw new Error(error.message || 'فشل إضافة الطالب في قاعدة البيانات');
     return data.id as number;
   },
 
@@ -94,7 +118,7 @@ export const studentsRepository = {
       .from('students')
       .update(patch)
       .eq('id', id);
-    if (error) throw error;
+    if (error) throw new Error(error.message || 'فشل تعديل بيانات الطالب');
   },
 
   async transferToTeacher(studentId: number, teacherId: number, teacherName: string): Promise<void> {
@@ -106,7 +130,7 @@ export const studentsRepository = {
         updated_at: new Date().toISOString(),
       })
       .eq('id', studentId);
-    if (error) throw error;
+    if (error) throw new Error(error.message || 'فشل نقل الطالب');
   },
 
   async delete(id: number): Promise<void> {
@@ -114,19 +138,22 @@ export const studentsRepository = {
       .from('students')
       .delete()
       .eq('id', id);
-    if (error) throw error;
+    if (error) throw new Error(error.message || 'فشل حذف الطالب');
   },
 
   async count(teacherId?: number): Promise<number> {
-    let query = supabase.from('students').select('*', { count: 'exact', head: true });
-    if (teacherId) query = query.eq('teacher_id', teacherId);
-    const { count, error } = await query;
-    if (error) return 0;
-    return count ?? 0;
+    try {
+      let query = supabase.from('students').select('*', { count: 'exact', head: true });
+      if (teacherId) query = query.eq('teacher_id', teacherId);
+      const { count, error } = await query;
+      if (error) return 0;
+      return count ?? 0;
+    } catch {
+      return 0;
+    }
   },
 
   async addPoints(studentId: number, points: number, surahName: string, date: Date): Promise<void> {
-    // Fetch current total first
     const { data: current } = await supabase
       .from('students')
       .select('total_points')
@@ -143,6 +170,6 @@ export const studentsRepository = {
         updated_at: new Date().toISOString(),
       })
       .eq('id', studentId);
-    if (error) throw error;
+    if (error) throw new Error(error.message || 'فشل تحديث نقاط الطالب');
   },
 };

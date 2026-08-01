@@ -1,8 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import type { Recitation } from '@/types';
 
-// ─── Mappers ────────────────────────────────────────────────────────────────
-
 function mapRecitation(row: Record<string, unknown>): Recitation {
   return {
     id: row.id as number,
@@ -10,33 +8,39 @@ function mapRecitation(row: Record<string, unknown>): Recitation {
     studentName: row.student_name as string | undefined,
     teacherId: (row.teacher_id as number) ?? 0,
     teacherName: row.teacher_name as string | undefined,
-    date: new Date(row.date as string),
+    date: new Date((row.date as string) || Date.now()),
     type: row.type as 'جزء' | 'سورة',
     part: row.part as number | undefined,
     surah: row.surah as number | undefined,
     surahName: row.surah_name as string | undefined,
     evaluation: row.evaluation as any,
-    evalPoints: row.eval_points as number,
-    extraPoints: row.extra_points as number,
-    totalPoints: row.total_points as number,
+    evalPoints: (row.eval_points as number) ?? 0,
+    extraPoints: (row.extra_points as number) ?? 0,
+    totalPoints: (row.total_points as number) ?? 0,
     notes: row.notes as string | undefined,
-    createdAt: new Date(row.created_at as string),
+    createdAt: new Date((row.created_at as string) || Date.now()),
   };
 }
 
-// ─── Repository ─────────────────────────────────────────────────────────────
-
 export const recitationsRepository = {
   async getAll(): Promise<Recitation[]> {
-    const { data, error } = await supabase.from('recitations').select('*').order('date', { ascending: false });
-    if (error) throw error;
-    return (data || []).map(mapRecitation);
+    try {
+      const { data, error } = await supabase.from('recitations').select('*').order('date', { ascending: false });
+      if (error) return [];
+      return (data || []).map(mapRecitation);
+    } catch {
+      return [];
+    }
   },
 
   async getByStudentId(studentId: number): Promise<Recitation[]> {
-    const { data, error } = await supabase.from('recitations').select('*').eq('student_id', studentId).order('date', { ascending: false });
-    if (error) throw error;
-    return (data || []).map(mapRecitation);
+    try {
+      const { data, error } = await supabase.from('recitations').select('*').eq('student_id', studentId).order('date', { ascending: false });
+      if (error) return [];
+      return (data || []).map(mapRecitation);
+    } catch {
+      return [];
+    }
   },
 
   async add(rec: Omit<Recitation, 'id'>): Promise<number> {
@@ -61,68 +65,99 @@ export const recitationsRepository = {
       })
       .select('id')
       .single();
-    if (error) throw error;
+    if (error) throw new Error(error.message || 'فشل تسجيل التسميع');
     return data.id as number;
   },
 
   async deleteByStudent(studentId: number): Promise<void> {
-    const { error } = await supabase.from('recitations').delete().eq('student_id', studentId);
-    if (error) throw error;
+    try {
+      await supabase.from('recitations').delete().eq('student_id', studentId);
+    } catch (err) {
+      console.warn('Delete recitations error:', err);
+    }
   },
 
   async getEvaluationStats(studentId: number): Promise<Record<string, number>> {
-    const { data, error } = await supabase.from('recitations').select('evaluation').eq('student_id', studentId);
-    if (error) return {};
-    return (data || []).reduce((acc: Record<string, number>, curr) => {
-      acc[curr.evaluation] = (acc[curr.evaluation] || 0) + 1;
-      return acc;
-    }, {});
+    try {
+      const { data, error } = await supabase.from('recitations').select('evaluation').eq('student_id', studentId);
+      if (error || !data) return {};
+      return data.reduce((acc: Record<string, number>, curr) => {
+        const ev = curr.evaluation as string;
+        acc[ev] = (acc[ev] || 0) + 1;
+        return acc;
+      }, {});
+    } catch {
+      return {};
+    }
   },
 
   async getChartData(studentId: number): Promise<{ date: string; points: number }[]> {
-    const { data, error } = await supabase.from('recitations').select('date, total_points').eq('student_id', studentId).order('date', { ascending: true });
-    if (error) return [];
-    
-    let cumulative = 0;
-    return (data || []).map(r => {
-      cumulative += (r.total_points as number);
-      return {
-        date: new Intl.DateTimeFormat('ar-EG', { month: 'short', day: 'numeric' }).format(new Date(r.date as string)),
-        points: cumulative,
-      };
-    });
+    try {
+      const { data, error } = await supabase.from('recitations').select('date, total_points').eq('student_id', studentId).order('date', { ascending: true });
+      if (error || !data) return [];
+      
+      let cumulative = 0;
+      return data.map(r => {
+        cumulative += (r.total_points as number) ?? 0;
+        return {
+          date: new Intl.DateTimeFormat('ar-EG', { month: 'short', day: 'numeric' }).format(new Date(r.date as string)),
+          points: cumulative,
+        };
+      });
+    } catch {
+      return [];
+    }
   },
 
   async getTodayCount(teacherId?: number): Promise<number> {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    let query = supabase.from('recitations').select('*', { count: 'exact', head: true }).gte('date', today.toISOString());
-    if (teacherId) query = query.eq('teacher_id', teacherId);
-    const { count } = await query;
-    return count ?? 0;
+    try {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      let query = supabase.from('recitations').select('*', { count: 'exact', head: true }).gte('date', today.toISOString());
+      if (teacherId) query = query.eq('teacher_id', teacherId);
+      const { count, error } = await query;
+      if (error) return 0;
+      return count ?? 0;
+    } catch {
+      return 0;
+    }
   },
 
   async getWeekCount(teacherId?: number): Promise<number> {
-    const weekAgo = new Date();
-    weekAgo.setDate(weekAgo.getDate() - 7);
-    let query = supabase.from('recitations').select('*', { count: 'exact', head: true }).gte('date', weekAgo.toISOString());
-    if (teacherId) query = query.eq('teacher_id', teacherId);
-    const { count } = await query;
-    return count ?? 0;
+    try {
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      let query = supabase.from('recitations').select('*', { count: 'exact', head: true }).gte('date', weekAgo.toISOString());
+      if (teacherId) query = query.eq('teacher_id', teacherId);
+      const { count, error } = await query;
+      if (error) return 0;
+      return count ?? 0;
+    } catch {
+      return 0;
+    }
   },
 
   async getMonthCount(teacherId?: number): Promise<number> {
-    const monthAgo = new Date();
-    monthAgo.setMonth(monthAgo.getMonth() - 1);
-    let query = supabase.from('recitations').select('*', { count: 'exact', head: true }).gte('date', monthAgo.toISOString());
-    if (teacherId) query = query.eq('teacher_id', teacherId);
-    const { count } = await query;
-    return count ?? 0;
+    try {
+      const monthAgo = new Date();
+      monthAgo.setMonth(monthAgo.getMonth() - 1);
+      let query = supabase.from('recitations').select('*', { count: 'exact', head: true }).gte('date', monthAgo.toISOString());
+      if (teacherId) query = query.eq('teacher_id', teacherId);
+      const { count, error } = await query;
+      if (error) return 0;
+      return count ?? 0;
+    } catch {
+      return 0;
+    }
   },
 
   async getRecent(limit: number): Promise<Recitation[]> {
-    const { data, error } = await supabase.from('recitations').select('*').order('date', { ascending: false }).limit(limit);
-    if (error) return [];
-    return (data || []).map(mapRecitation);
+    try {
+      const { data, error } = await supabase.from('recitations').select('*').order('date', { ascending: false }).limit(limit);
+      if (error || !data) return [];
+      return data.map(mapRecitation);
+    } catch {
+      return [];
+    }
   },
 };

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '@/store/authStore';
 import { Sidebar } from '@/components/shared/Sidebar';
@@ -19,19 +19,29 @@ const pageTransition = {
   duration: 0.3,
 };
 
+
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, user } = useAuthStore();
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     if (!isAuthenticated) {
       router.replace('/login');
+      return;
     }
-  }, [isAuthenticated, router]);
+
+    // Role-based route guard
+    if (user?.role === 'teacher' && pathname.startsWith('/admin')) {
+      router.replace('/teacher');
+    } else if (user?.role === 'admin' && pathname.startsWith('/teacher')) {
+      router.replace('/admin');
+    }
+  }, [isAuthenticated, user, pathname, router]);
 
   if (!isAuthenticated) {
     return (

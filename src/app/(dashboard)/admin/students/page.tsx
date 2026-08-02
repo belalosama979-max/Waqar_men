@@ -84,6 +84,8 @@ export default function AdminStudentsPage() {
       }
       setFormOpen(false);
       load();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'حدث خطأ غير متوقع');
     } finally {
       setSaving(false);
     }

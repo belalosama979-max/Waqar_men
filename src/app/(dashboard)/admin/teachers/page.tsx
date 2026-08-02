@@ -77,6 +77,8 @@ export default function AdminTeachersPage() {
       }
       setFormOpen(false);
       load();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'حدث خطأ غير متوقع');
     } finally {
       setSaving(false);
     }
@@ -231,6 +233,16 @@ export default function AdminTeachersPage() {
                       onChange={(e) => setForm({ ...form, name: e.target.value })}
                       className="input-glass"
                       placeholder="مثال: محمد أحمد"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm text-emerald-300/70 mb-1.5 block">اسم المستخدم (اختياري)</label>
+                    <input
+                      type="text"
+                      value={form.username}
+                      onChange={(e) => setForm({ ...form, username: e.target.value })}
+                      className="input-glass"
+                      placeholder="إذا تركته فارغاً سيتم استخدام الاسم الأول"
                     />
                   </div>
                   {!editingTeacher && (

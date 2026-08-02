@@ -24,6 +24,7 @@ export default function TeacherStudentsPage() {
     setLoading(false);
   }, [user]);
 
+
   useEffect(() => { load(); }, [load]);
 
   const filtered = students.filter(

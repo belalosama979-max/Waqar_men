@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import { BookOpen, Lock, User, Eye, EyeOff, ChevronDown } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { teachersRepository, adminRepository } from '@/lib/db';
-import { ADMIN_USERNAME, ADMIN_PASSWORD, ADMIN_NAME } from '@/lib/constants';
+import { ADMIN_NAME } from '@/lib/constants';
 import type { Teacher } from '@/types';
 
 export default function LoginPage() {

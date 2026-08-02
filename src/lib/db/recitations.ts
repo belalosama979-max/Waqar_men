@@ -13,7 +13,7 @@ function mapRecitation(row: Record<string, unknown>): Recitation {
     part: row.part as number | undefined,
     surah: row.surah as number | undefined,
     surahName: row.surah_name as string | undefined,
-    evaluation: row.evaluation as any,
+    evaluation: row.evaluation as Recitation['evaluation'],
     evalPoints: (row.eval_points as number) ?? 0,
     extraPoints: (row.extra_points as number) ?? 0,
     totalPoints: (row.total_points as number) ?? 0,

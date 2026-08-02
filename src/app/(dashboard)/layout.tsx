@@ -64,7 +64,7 @@ export default function DashboardLayout({
               animate="in"
               exit="out"
               variants={pageVariants}
-              transition={{ duration: 0.3 }}
+              transition={pageTransition}
               className="p-4 md:p-6 min-h-full"
             >
               {children}

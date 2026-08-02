@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -15,7 +15,6 @@ import {
   Menu,
   X,
   ChevronLeft,
-  BarChart3,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { toast } from 'sonner';
@@ -57,7 +56,7 @@ export function Sidebar() {
     router.push('/login');
   };
 
-  const SidebarContent = () => (
+  const renderSidebarContent = () => (
     <div className="flex flex-col h-full">
       {/* Logo */}
       <div className="p-4 border-b border-emerald-500/10">
@@ -161,7 +160,7 @@ export function Sidebar() {
           borderLeft: '1px solid rgba(16,185,129,0.1)',
         }}
       >
-        <SidebarContent />
+        {renderSidebarContent()}
       </motion.aside>
 
       {/* Mobile Hamburger Button */}
@@ -200,7 +199,7 @@ export function Sidebar() {
                 borderLeft: '1px solid rgba(16,185,129,0.15)',
               }}
             >
-              <SidebarContent />
+              {renderSidebarContent()}
             </motion.aside>
           </>
         )}

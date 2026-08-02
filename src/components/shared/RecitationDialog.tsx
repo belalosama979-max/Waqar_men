@@ -37,6 +37,7 @@ export function RecitationDialog({ student, open, onClose, onSaved }: Recitation
   const [evaluationOptions, setEvaluationOptions] = useState<EvaluationOption[]>(DEFAULT_EVALUATIONS);
   const [currentEvalPoints, setCurrentEvalPoints] = useState<number>(60);
 
+
   useEffect(() => {
     if (open) {
       // Reset state

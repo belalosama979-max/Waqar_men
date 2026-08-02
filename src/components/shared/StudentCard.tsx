@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Mic, Star, Calendar, Award } from 'lucide-react';
 import { RecitationDialog } from './RecitationDialog';
-import { formatShortDate, getEvaluationLabel, getEvaluationBadgeColor } from '@/lib/utils';
+import { formatShortDate } from '@/lib/utils';
 import type { Student } from '@/types';
 
 interface StudentCardProps {

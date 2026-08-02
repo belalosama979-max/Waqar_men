@@ -1,0 +1,73 @@
+name: Build Android APK
+
+on:
+  workflow_dispatch:
+    inputs:
+      live_url:
+        description: 'رابط الموقع الفعلي (مثال: https://waqar.vercel.app)'
+        required: true
+        type: string
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Generate Capacitor Config
+        run: |
+          cat << 'EOF' > capacitor.config.ts
+          import { CapacitorConfig } from '@capacitor/cli';
+          const config: CapacitorConfig = {
+            appId: 'com.waqar.app',
+            appName: 'وقار',
+            webDir: 'out',
+            server: {
+              url: '${{ inputs.live_url }}',
+              cleartext: true
+            }
+          };
+          export default config;
+          EOF
+
+      - name: Add Android Platform
+        run: npx cap add android
+
+      - name: Generate App Icons
+        run: |
+          npm install -g @capacitor/assets
+          mkdir -p assets
+          cp public/icons/icon-512.png assets/icon.png
+          cp public/icons/icon-512.png assets/splash.png
+          npx capacitor-assets generate --android
+
+      - name: Copy Icons to Android Project
+        run: |
+          npx cap sync android
+
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Build APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: waqar-app-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk

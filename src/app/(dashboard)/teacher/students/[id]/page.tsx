@@ -62,7 +62,7 @@ export default function StudentProfilePage() {
       await studentsRepository.addPoints(studentId, -pointsToDeduct);
       toast.success('تم التراجع عن التسميع وخصم النقاط بنجاح');
       load();
-    } catch (err) {
+    } catch {
       toast.error('حدث خطأ أثناء التراجع');
     } finally {
       setDeletingId(null);

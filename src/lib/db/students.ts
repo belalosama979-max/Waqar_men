@@ -161,7 +161,7 @@ export const studentsRepository = {
       .single();
     const newTotal = ((current?.total_points as number) ?? 0) + points;
 
-    const patch: Record<string, any> = {
+    const patch: Record<string, unknown> = {
       total_points: newTotal,
       updated_at: new Date().toISOString(),
     };

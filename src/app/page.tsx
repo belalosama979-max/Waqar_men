@@ -2,22 +2,21 @@
 
 import { useState, useEffect } from 'react';
 
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '@/store/authStore';
-import { BookOpen, Star, Shield, Smartphone, Download, ArrowLeft } from 'lucide-react';
+import { BookOpen, Star, Shield, Smartphone, Download, ArrowLeft, X } from 'lucide-react';
 import Link from 'next/link';
 
 export default function HomePage() {
   const { isAuthenticated, user } = useAuthStore();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
-  const [isInstallable, setIsInstallable] = useState(false);
+  const [showInstallModal, setShowInstallModal] = useState(false);
 
   useEffect(() => {
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e);
-      setIsInstallable(true);
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
@@ -27,12 +26,16 @@ export default function HomePage() {
     };
   }, []);
 
-  const handleInstallClick = async () => {
+  const handleInstallClick = () => {
+    setShowInstallModal(true);
+  };
+
+  const handleNativeInstall = async () => {
     if (!deferredPrompt) return;
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
     if (outcome === 'accepted') {
-      setIsInstallable(false);
+      setShowInstallModal(false);
     }
     setDeferredPrompt(null);
   };
@@ -55,15 +58,13 @@ export default function HomePage() {
           <span className="font-bold text-2xl text-emerald-50 tracking-wide">وقار</span>
         </div>
         <div className="flex items-center gap-3">
-          {isInstallable && (
-            <button
-              onClick={handleInstallClick}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-emerald-900/40 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-800/50 transition-all"
-            >
-              <Download className="w-4 h-4" />
-              <span className="hidden sm:block">تثبيت التطبيق</span>
-            </button>
-          )}
+          <button
+            onClick={handleInstallClick}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-emerald-900/40 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-800/50 transition-all"
+          >
+            <Download className="w-4 h-4" />
+            <span className="hidden sm:block">تثبيت التطبيق</span>
+          </button>
           {isAuthenticated ? (
             <Link
               href={user?.role === 'admin' ? '/admin' : '/teacher'}
@@ -125,15 +126,13 @@ export default function HomePage() {
               </Link>
             )}
             
-            {isInstallable && (
-              <button
-                onClick={handleInstallClick}
-                className="px-8 py-4 rounded-2xl text-lg font-bold flex items-center gap-2 w-full sm:w-auto justify-center bg-white/5 hover:bg-white/10 text-white border border-white/10 transition-all backdrop-blur-sm hover:scale-105"
-              >
-                <Download className="w-5 h-5" />
-                تثبيت على الجهاز
-              </button>
-            )}
+            <button
+              onClick={handleInstallClick}
+              className="px-8 py-4 rounded-2xl text-lg font-bold flex items-center gap-2 w-full sm:w-auto justify-center bg-white/5 hover:bg-white/10 text-white border border-white/10 transition-all backdrop-blur-sm hover:scale-105"
+            >
+              <Download className="w-5 h-5" />
+              تثبيت على الجهاز
+            </button>
           </div>
         </motion.div>
       </main>
@@ -172,6 +171,69 @@ export default function HomePage() {
           جميع الحقوق محفوظة &copy; {new Date().getFullYear()} - نظام وقار لإدارة الحلقات
         </p>
       </footer>
+
+      {/* Install Modal */}
+      <AnimatePresence>
+        {showInstallModal && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50"
+              onClick={() => setShowInstallModal(false)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, x: '-50%', y: '-50%' }}
+              animate={{ opacity: 1, scale: 1, x: '-50%', y: '-50%' }}
+              exit={{ opacity: 0, scale: 0.95, x: '-50%', y: '-50%' }}
+              className="fixed top-1/2 left-1/2 w-[90%] max-w-md bg-emerald-950 border border-emerald-500/30 p-6 rounded-3xl z-50 shadow-2xl shadow-emerald-900/50"
+            >
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-bold text-emerald-100">تثبيت التطبيق على جهازك</h3>
+                <button onClick={() => setShowInstallModal(false)} className="p-1 text-emerald-500/50 hover:text-emerald-400 bg-emerald-500/10 rounded-lg">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <div className="space-y-4 mb-6">
+                <div className="bg-emerald-900/30 p-4 rounded-2xl border border-emerald-500/10">
+                  <h4 className="font-bold text-emerald-300 mb-2 flex items-center gap-2">
+                    <span className="text-xl">🍎</span> لأجهزة آيفون (iOS)
+                  </h4>
+                  <p className="text-sm text-emerald-100/70 leading-relaxed">
+                    1. افتح هذا الموقع باستخدام متصفح <strong>Safari</strong>.<br/>
+                    2. اضغط على زر المشاركة (مربع يخرج منه سهم) في أسفل الشاشة.<br/>
+                    3. اختر <strong>"إضافة للشاشة الرئيسية" (Add to Home Screen)</strong>.
+                  </p>
+                </div>
+                
+                <div className="bg-emerald-900/30 p-4 rounded-2xl border border-emerald-500/10">
+                  <h4 className="font-bold text-emerald-300 mb-2 flex items-center gap-2">
+                    <span className="text-xl">🤖</span> لأجهزة أندرويد (Android)
+                  </h4>
+                  <p className="text-sm text-emerald-100/70 leading-relaxed">
+                    1. افتح الموقع من متصفح <strong>Chrome</strong>.<br/>
+                    2. اضغط على القائمة (الثلاث نقاط) في أعلى الشاشة.<br/>
+                    3. اختر <strong>"إضافة للشاشة الرئيسية" (Add to Home screen)</strong>.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-3">
+                {deferredPrompt && (
+                  <button onClick={handleNativeInstall} className="btn-emerald py-3 rounded-xl font-bold w-full justify-center">
+                    تثبيت مباشر الآن
+                  </button>
+                )}
+                <button onClick={() => setShowInstallModal(false)} className="py-3 rounded-xl font-bold text-emerald-500 hover:bg-emerald-500/10 transition-colors w-full">
+                  فهمت، شكراً
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

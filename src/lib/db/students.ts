@@ -153,7 +153,7 @@ export const studentsRepository = {
     }
   },
 
-  async addPoints(studentId: number, points: number, surahName: string, date: Date): Promise<void> {
+  async addPoints(studentId: number, points: number, surahName?: string, date?: Date): Promise<void> {
     const { data: current } = await supabase
       .from('students')
       .select('total_points')
@@ -161,14 +161,16 @@ export const studentsRepository = {
       .single();
     const newTotal = ((current?.total_points as number) ?? 0) + points;
 
+    const patch: Record<string, any> = {
+      total_points: newTotal,
+      updated_at: new Date().toISOString(),
+    };
+    if (surahName) patch.last_recitation = surahName;
+    if (date) patch.last_date = date.toISOString();
+
     const { error } = await supabase
       .from('students')
-      .update({
-        total_points: newTotal,
-        last_recitation: surahName,
-        last_date: date.toISOString(),
-        updated_at: new Date().toISOString(),
-      })
+      .update(patch)
       .eq('id', studentId);
     if (error) throw new Error(error.message || 'فشل تحديث نقاط الطالب');
   },

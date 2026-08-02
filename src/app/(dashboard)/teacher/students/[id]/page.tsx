@@ -3,7 +3,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { ArrowRight, Star, Calendar, BookOpen, Mic, BarChart3 } from 'lucide-react';
+import { ArrowRight, Star, Calendar, BookOpen, Mic, BarChart3, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 import {
   LineChart,
   Line,
@@ -31,6 +32,7 @@ export default function StudentProfilePage() {
   const [chartData, setChartData] = useState<{ date: string; points: number }[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -50,6 +52,22 @@ export default function StudentProfilePage() {
   }, [studentId]);
 
   useEffect(() => { load(); }, [load]);
+
+  const handleDeleteRecitation = async (recId: number, pointsToDeduct: number) => {
+    if (!confirm('هل أنت متأكد من التراجع عن هذا التسميع وخصم النقاط الخاصة به؟')) return;
+    
+    setDeletingId(recId);
+    try {
+      await recitationsRepository.delete(recId);
+      await studentsRepository.addPoints(studentId, -pointsToDeduct);
+      toast.success('تم التراجع عن التسميع وخصم النقاط بنجاح');
+      load();
+    } catch (err) {
+      toast.error('حدث خطأ أثناء التراجع');
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   if (!loading && !student) {
     return (
@@ -206,12 +224,28 @@ export default function StudentProfilePage() {
                 transition={{ delay: idx * 0.03 }}
               >
                 <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-sm font-semibold text-emerald-200">
-                    {rec.surahName || (rec.type === 'جزء' ? `الجزء ${rec.part}` : '')}
-                  </span>
-                  <span className={`badge ${getEvaluationBadgeColor(rec.evaluation)}`}>
-                    {getEvaluationLabel(rec.evaluation)}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-semibold text-emerald-200">
+                      {rec.surahName || (rec.type === 'جزء' ? `الجزء ${rec.part}` : '')}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className={`badge ${getEvaluationBadgeColor(rec.evaluation)}`}>
+                      {getEvaluationLabel(rec.evaluation)}
+                    </span>
+                    <button
+                      onClick={() => handleDeleteRecitation(rec.id, rec.totalPoints)}
+                      disabled={deletingId === rec.id}
+                      className="p-1.5 rounded-lg text-red-400/50 hover:text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-50"
+                      title="تراجع عن التسميع"
+                    >
+                      {deletingId === rec.id ? (
+                        <div className="w-4 h-4 border-2 border-red-500/30 border-t-red-500 rounded-full animate-spin" />
+                      ) : (
+                        <Trash2 className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
                 </div>
                 <div className="flex items-center justify-between text-xs text-emerald-500/50">
                   <span>{formatArabicDate(rec.date)}</span>

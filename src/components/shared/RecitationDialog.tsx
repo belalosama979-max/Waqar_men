@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Calendar, BookOpen, Star, Plus, ChevronRight, ChevronLeft, Check } from 'lucide-react';
 import { toast } from 'sonner';
-import { recitationsRepository, settingsRepository } from '@/lib/db';
+import { recitationsRepository, settingsRepository, studentsRepository } from '@/lib/db';
 import { QURAN_SURAHS, QURAN_PARTS, DEFAULT_EVALUATIONS } from '@/lib/constants';
 import { useAuthStore } from '@/store/authStore';
 import type { Student, RecitationType, EvaluationKey, EvaluationOption } from '@/types';
@@ -96,6 +96,8 @@ export function RecitationDialog({ student, open, onClose, onSaved }: Recitation
         totalPoints,
         createdAt: new Date(),
       });
+
+      await studentsRepository.addPoints(student.id!, totalPoints, recitationLabel, new Date(date));
 
       toast.success(`تم تسجيل تسميع ${student.name} بنجاح! ✨`, {
         description: `${recitationLabel} — ${evaluationOptions.find(e => e.key === evaluation)?.label} — ${totalPoints} نقطة`,

@@ -69,6 +69,11 @@ export const recitationsRepository = {
     return data.id as number;
   },
 
+  async delete(id: number): Promise<void> {
+    const { error } = await supabase.from('recitations').delete().eq('id', id);
+    if (error) throw new Error(error.message || 'فشل حذف التسميع');
+  },
+
   async deleteByStudent(studentId: number): Promise<void> {
     try {
       await supabase.from('recitations').delete().eq('student_id', studentId);

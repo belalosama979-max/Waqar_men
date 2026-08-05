@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Mic, Star, Calendar, Award } from 'lucide-react';
+import { Mic, Star, Calendar, Award, BookOpen } from 'lucide-react';
 import { RecitationDialog } from './RecitationDialog';
 import { formatShortDate } from '@/lib/utils';
 import type { Student } from '@/types';
@@ -54,9 +54,9 @@ export function StudentCard({ student, index = 0, onRecitationSaved, onClick }: 
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-3 gap-2">
           <div
-            className="p-3 rounded-xl text-center"
+            className="p-2 sm:p-3 rounded-xl text-center"
             style={{
               background: 'rgba(16,185,129,0.08)',
               border: '1px solid rgba(16,185,129,0.12)',
@@ -83,6 +83,21 @@ export function StudentCard({ student, index = 0, onRecitationSaved, onClick }: 
             </div>
             <p className="text-xs font-semibold text-emerald-300 leading-tight">
               {student.lastDate ? formatShortDate(student.lastDate) : '—'}
+            </p>
+          </div>
+          <div
+            className="p-2 sm:p-3 rounded-xl text-center"
+            style={{
+              background: 'rgba(16,185,129,0.08)',
+              border: '1px solid rgba(16,185,129,0.12)',
+            }}
+          >
+            <div className="flex items-center justify-center gap-1 mb-0.5">
+              <BookOpen className="w-3 h-3 text-emerald-400" />
+              <span className="text-[10px] sm:text-xs text-emerald-400/60">صفحة</span>
+            </div>
+            <p className="text-base sm:text-lg font-bold text-emerald-300">
+              {student.totalPages.toLocaleString('ar-SA')}
             </p>
           </div>
         </div>

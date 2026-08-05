@@ -8,6 +8,7 @@ function mapStudent(row: Record<string, unknown>): Student {
     teacherId: row.teacher_id as number,
     teacherName: row.teacher_name as string | undefined,
     totalPoints: (row.total_points as number) ?? 0,
+    totalPages: (row.total_pages as number) ?? 0,
     lastRecitation: row.last_recitation as string | null,
     lastDate: row.last_date ? new Date(row.last_date as string) : null,
     createdAt: new Date((row.created_at as string) || Date.now()),
@@ -94,6 +95,7 @@ export const studentsRepository = {
         teacher_id: student.teacherId,
         teacher_name: student.teacherName,
         total_points: student.totalPoints ?? 0,
+        total_pages: student.totalPages ?? 0,
         last_recitation: student.lastRecitation,
         last_date: student.lastDate?.toISOString() ?? null,
         created_at: new Date().toISOString(),
@@ -111,6 +113,7 @@ export const studentsRepository = {
     if (changes.teacherId !== undefined) patch.teacher_id = changes.teacherId;
     if (changes.teacherName !== undefined) patch.teacher_name = changes.teacherName;
     if (changes.totalPoints !== undefined) patch.total_points = changes.totalPoints;
+    if (changes.totalPages !== undefined) patch.total_pages = changes.totalPages;
     if (changes.lastRecitation !== undefined) patch.last_recitation = changes.lastRecitation;
     if (changes.lastDate !== undefined) patch.last_date = changes.lastDate?.toISOString() ?? null;
 
@@ -153,16 +156,18 @@ export const studentsRepository = {
     }
   },
 
-  async addPoints(studentId: number, points: number, surahName?: string, date?: Date): Promise<void> {
+  async addPointsAndPages(studentId: number, points: number, pages: number, surahName?: string, date?: Date): Promise<void> {
     const { data: current } = await supabase
       .from('students')
-      .select('total_points')
+      .select('total_points, total_pages')
       .eq('id', studentId)
       .single();
-    const newTotal = ((current?.total_points as number) ?? 0) + points;
+    const newTotalPoints = ((current?.total_points as number) ?? 0) + points;
+    const newTotalPages = ((current?.total_pages as number) ?? 0) + pages;
 
     const patch: Record<string, unknown> = {
-      total_points: newTotal,
+      total_points: newTotalPoints,
+      total_pages: newTotalPages,
       updated_at: new Date().toISOString(),
     };
     if (surahName) patch.last_recitation = surahName;
@@ -172,6 +177,6 @@ export const studentsRepository = {
       .from('students')
       .update(patch)
       .eq('id', studentId);
-    if (error) throw new Error(error.message || 'فشل تحديث نقاط الطالب');
+    if (error) throw new Error(error.message || 'فشل تحديث بيانات الطالب');
   },
 };

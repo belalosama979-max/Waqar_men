@@ -13,6 +13,7 @@ export default function TeacherLeaderboardPage() {
   const { user } = useAuthStore();
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sortBy, setSortBy] = useState<'points' | 'pages'>('points');
 
   const load = useCallback(async () => {
     if (!user) return;
@@ -22,6 +23,11 @@ export default function TeacherLeaderboardPage() {
   }, [user]);
 
   useEffect(() => { load(); }, [load]);
+
+  const sortedStudents = [...students].sort((a, b) => {
+    if (sortBy === 'points') return (b.totalPoints || 0) - (a.totalPoints || 0);
+    return (b.totalPages || 0) - (a.totalPages || 0);
+  });
 
   return (
     <div className="space-y-6">
@@ -36,12 +42,28 @@ export default function TeacherLeaderboardPage() {
         </div>
         <div>
           <h2 className="text-xl font-bold text-gradient-gold">لوحة شرف الصف</h2>
-          <p className="text-sm text-emerald-400/50">ترتيب طلابك حسب النقاط</p>
+          <p className="text-sm text-emerald-400/50">ترتيب طلابك حسب {sortBy === 'points' ? 'النقاط' : 'عدد الصفحات'}</p>
         </div>
       </motion.div>
 
+      {/* Sort Toggle */}
+      <div className="flex rounded-xl overflow-hidden border border-emerald-500/20">
+        <button
+          onClick={() => setSortBy('points')}
+          className={`flex-1 py-2 text-sm font-semibold transition-all ${sortBy === 'points' ? 'bg-emerald-700/40 text-emerald-300' : 'text-emerald-400/50 hover:bg-emerald-900/20'}`}
+        >
+          الترتيب بالنقاط
+        </button>
+        <button
+          onClick={() => setSortBy('pages')}
+          className={`flex-1 py-2 text-sm font-semibold transition-all ${sortBy === 'pages' ? 'bg-emerald-700/40 text-emerald-300' : 'text-emerald-400/50 hover:bg-emerald-900/20'}`}
+        >
+          الترتيب بالصفحات
+        </button>
+      </div>
+
       {/* Top 3 Podium */}
-      {!loading && students.length >= 3 && (
+      {!loading && sortedStudents.length >= 3 && (
         <div className="grid grid-cols-3 gap-3 mb-2">
           {/* 2nd */}
           <motion.div
@@ -51,9 +73,11 @@ export default function TeacherLeaderboardPage() {
             transition={{ delay: 0.2 }}
           >
             <div className="text-3xl mb-2">🥈</div>
-            <p className="font-bold text-emerald-200 text-sm truncate">{students[1]?.name}</p>
-            <p className="text-gold-400 font-bold mt-1">{students[1]?.totalPoints.toLocaleString('ar-SA')}</p>
-            <p className="text-xs text-emerald-500/40">نقطة</p>
+            <p className="font-bold text-emerald-200 text-sm truncate">{sortedStudents[1]?.name}</p>
+            <p className="text-gold-400 font-bold mt-1">
+              {sortBy === 'points' ? sortedStudents[1]?.totalPoints.toLocaleString('ar-SA') : sortedStudents[1]?.totalPages.toLocaleString('ar-SA')}
+            </p>
+            <p className="text-xs text-emerald-500/40">{sortBy === 'points' ? 'نقطة' : 'صفحة'}</p>
           </motion.div>
           {/* 1st */}
           <motion.div
@@ -64,9 +88,11 @@ export default function TeacherLeaderboardPage() {
             transition={{ delay: 0.1 }}
           >
             <div className="text-4xl mb-2">🥇</div>
-            <p className="font-bold text-gold-300 text-sm truncate">{students[0]?.name}</p>
-            <p className="text-gold-400 font-bold text-lg mt-1">{students[0]?.totalPoints.toLocaleString('ar-SA')}</p>
-            <p className="text-xs text-gold-500/60">نقطة</p>
+            <p className="font-bold text-gold-300 text-sm truncate">{sortedStudents[0]?.name}</p>
+            <p className="text-gold-400 font-bold text-lg mt-1">
+              {sortBy === 'points' ? sortedStudents[0]?.totalPoints.toLocaleString('ar-SA') : sortedStudents[0]?.totalPages.toLocaleString('ar-SA')}
+            </p>
+            <p className="text-xs text-gold-500/60">{sortBy === 'points' ? 'نقطة' : 'صفحة'}</p>
           </motion.div>
           {/* 3rd */}
           <motion.div
@@ -76,9 +102,11 @@ export default function TeacherLeaderboardPage() {
             transition={{ delay: 0.3 }}
           >
             <div className="text-3xl mb-2">🥉</div>
-            <p className="font-bold text-emerald-200 text-sm truncate">{students[2]?.name}</p>
-            <p className="text-gold-400 font-bold mt-1">{students[2]?.totalPoints.toLocaleString('ar-SA')}</p>
-            <p className="text-xs text-emerald-500/40">نقطة</p>
+            <p className="font-bold text-emerald-200 text-sm truncate">{sortedStudents[2]?.name}</p>
+            <p className="text-gold-400 font-bold mt-1">
+              {sortBy === 'points' ? sortedStudents[2]?.totalPoints.toLocaleString('ar-SA') : sortedStudents[2]?.totalPages.toLocaleString('ar-SA')}
+            </p>
+            <p className="text-xs text-emerald-500/40">{sortBy === 'points' ? 'نقطة' : 'صفحة'}</p>
           </motion.div>
         </div>
       )}
@@ -91,14 +119,14 @@ export default function TeacherLeaderboardPage() {
         </div>
         {loading ? (
           <div className="p-4"><TableSkeleton rows={8} /></div>
-        ) : students.length === 0 ? (
+        ) : sortedStudents.length === 0 ? (
           <div className="p-10 text-center">
             <p className="text-4xl mb-3">📊</p>
             <p className="text-emerald-400/50">لا يوجد طلاب بعد</p>
           </div>
         ) : (
           <div className="divide-y divide-emerald-500/5">
-            {students.map((student, idx) => (
+            {sortedStudents.map((student, idx) => (
               <motion.div
                 key={student.id}
                 className="flex items-center gap-4 px-4 py-3 table-row-hover"
@@ -122,11 +150,19 @@ export default function TeacherLeaderboardPage() {
                     {student.lastDate ? formatShortDate(student.lastDate) : 'لم يُسمّع بعد'}
                   </p>
                 </div>
-                <div className="text-right flex-shrink-0">
-                  <p className="font-bold text-gold-400 text-sm">
-                    {student.totalPoints.toLocaleString('ar-SA')}
-                  </p>
-                  <p className="text-xs text-emerald-500/40">نقطة</p>
+                <div className="text-right flex-shrink-0 flex items-center gap-4">
+                  <div className="text-right">
+                    <p className="font-bold text-gold-400 text-sm">
+                      {student.totalPoints.toLocaleString('ar-SA')}
+                    </p>
+                    <p className="text-xs text-emerald-500/40">نقطة</p>
+                  </div>
+                  <div className="text-right w-14">
+                    <p className="font-bold text-emerald-300 text-sm">
+                      {student.totalPages.toLocaleString('ar-SA')}
+                    </p>
+                    <p className="text-xs text-emerald-500/40">صفحة</p>
+                  </div>
                 </div>
               </motion.div>
             ))}

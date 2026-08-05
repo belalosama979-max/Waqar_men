@@ -25,6 +25,7 @@ export interface Student {
   teacherId: number;
   teacherName?: string; // denormalized for display
   totalPoints: number;
+  totalPages: number;
   lastRecitation: string | null; // e.g. "جزء 1" or "سورة الفاتحة"
   lastDate: Date | null;
   createdAt: Date;
@@ -42,6 +43,11 @@ export interface Recitation {
   part?: number; // 1-30 if type === 'جزء'
   surah?: number; // surah index 1-114 if type === 'سورة'
   surahName?: string; // denormalized
+  fromPage?: number;
+  toPage?: number;
+  fromAyah?: number;
+  toAyah?: number;
+  pagesCount: number;
   evaluation: EvaluationKey;
   evalPoints: number;
   extraPoints: number;
@@ -154,6 +160,11 @@ export interface RecitationFormData {
   type: RecitationType;
   part?: number;
   surahIndex?: number;
+  fromPage?: number;
+  toPage?: number;
+  fromAyah?: number;
+  toAyah?: number;
+  pagesCount?: number;
   evaluation: EvaluationKey;
   extraPoints: number;
   notes?: string;

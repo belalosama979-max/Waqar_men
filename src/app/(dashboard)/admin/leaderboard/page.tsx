@@ -14,6 +14,7 @@ export default function AdminLeaderboardPage() {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<'global' | 'byTeacher'>('global');
   const [selectedTeacher, setSelectedTeacher] = useState<string>('');
+  const [sortBy, setSortBy] = useState<'points' | 'pages'>('points');
 
   const load = useCallback(async () => {
     const [allStudents, allTeachers] = await Promise.all([
@@ -27,11 +28,14 @@ export default function AdminLeaderboardPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  const displayedStudents = tab === 'global'
+  const displayedStudents = (tab === 'global'
     ? students
     : selectedTeacher
     ? students.filter((s) => String(s.teacherId) === selectedTeacher)
-    : students;
+    : students).sort((a, b) => {
+      if (sortBy === 'points') return (b.totalPoints || 0) - (a.totalPoints || 0);
+      return (b.totalPages || 0) - (a.totalPages || 0);
+    });
 
   return (
     <div className="space-y-6">
@@ -64,6 +68,22 @@ export default function AdminLeaderboardPage() {
         </button>
       </div>
 
+      {/* Sort Toggle */}
+      <div className="flex rounded-xl overflow-hidden border border-emerald-500/20">
+        <button
+          onClick={() => setSortBy('points')}
+          className={`flex-1 py-2 text-sm font-semibold transition-all ${sortBy === 'points' ? 'bg-emerald-700/40 text-emerald-300' : 'text-emerald-400/50 hover:bg-emerald-900/20'}`}
+        >
+          الترتيب بالنقاط
+        </button>
+        <button
+          onClick={() => setSortBy('pages')}
+          className={`flex-1 py-2 text-sm font-semibold transition-all ${sortBy === 'pages' ? 'bg-emerald-700/40 text-emerald-300' : 'text-emerald-400/50 hover:bg-emerald-900/20'}`}
+        >
+          الترتيب بالصفحات
+        </button>
+      </div>
+
       {/* Teacher Filter */}
       {tab === 'byTeacher' && (
         <select value={selectedTeacher} onChange={(e) => setSelectedTeacher(e.target.value)} className="select-glass">
@@ -79,19 +99,28 @@ export default function AdminLeaderboardPage() {
             <div className="text-3xl mb-2">🥈</div>
             <p className="font-bold text-emerald-200 text-sm truncate">{displayedStudents[1]?.name}</p>
             <p className="text-xs text-emerald-500/40">{displayedStudents[1]?.teacherName}</p>
-            <p className="text-gold-400 font-bold mt-1">{displayedStudents[1]?.totalPoints.toLocaleString('ar-SA')}</p>
+            <p className="text-gold-400 font-bold mt-1">
+              {sortBy === 'points' ? displayedStudents[1]?.totalPoints.toLocaleString('ar-SA') : displayedStudents[1]?.totalPages.toLocaleString('ar-SA')}
+            </p>
+            <p className="text-xs text-emerald-500/40">{sortBy === 'points' ? 'نقطة' : 'صفحة'}</p>
           </motion.div>
           <motion.div className="glass-card-gold p-4 text-center -mt-4" style={{ boxShadow: '0 0 30px rgba(251,191,36,0.2)' }} initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
             <div className="text-4xl mb-2">🥇</div>
             <p className="font-bold text-gold-300 text-sm truncate">{displayedStudents[0]?.name}</p>
             <p className="text-xs text-gold-500/50">{displayedStudents[0]?.teacherName}</p>
-            <p className="text-gold-400 font-bold text-lg mt-1">{displayedStudents[0]?.totalPoints.toLocaleString('ar-SA')}</p>
+            <p className="text-gold-400 font-bold text-lg mt-1">
+              {sortBy === 'points' ? displayedStudents[0]?.totalPoints.toLocaleString('ar-SA') : displayedStudents[0]?.totalPages.toLocaleString('ar-SA')}
+            </p>
+            <p className="text-xs text-gold-500/60">{sortBy === 'points' ? 'نقطة' : 'صفحة'}</p>
           </motion.div>
           <motion.div className="glass-card p-4 text-center pt-8" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
             <div className="text-3xl mb-2">🥉</div>
             <p className="font-bold text-emerald-200 text-sm truncate">{displayedStudents[2]?.name}</p>
             <p className="text-xs text-emerald-500/40">{displayedStudents[2]?.teacherName}</p>
-            <p className="text-gold-400 font-bold mt-1">{displayedStudents[2]?.totalPoints.toLocaleString('ar-SA')}</p>
+            <p className="text-gold-400 font-bold mt-1">
+              {sortBy === 'points' ? displayedStudents[2]?.totalPoints.toLocaleString('ar-SA') : displayedStudents[2]?.totalPages.toLocaleString('ar-SA')}
+            </p>
+            <p className="text-xs text-emerald-500/40">{sortBy === 'points' ? 'نقطة' : 'صفحة'}</p>
           </motion.div>
         </div>
       )}
@@ -117,6 +146,7 @@ export default function AdminLeaderboardPage() {
                   <th className="px-4 py-3 text-right text-xs font-semibold text-emerald-400/60">الطالب</th>
                   <th className="px-4 py-3 text-right text-xs font-semibold text-emerald-400/60">المعلم</th>
                   <th className="px-4 py-3 text-right text-xs font-semibold text-emerald-400/60">النقاط</th>
+                  <th className="px-4 py-3 text-right text-xs font-semibold text-emerald-400/60">الصفحات</th>
                   <th className="px-4 py-3 text-right text-xs font-semibold text-emerald-400/60">آخر تسميع</th>
                 </tr>
               </thead>
@@ -139,6 +169,9 @@ export default function AdminLeaderboardPage() {
                     <td className="px-4 py-3 text-sm text-emerald-300/60">{student.teacherName || '—'}</td>
                     <td className="px-4 py-3">
                       <span className="font-bold text-gold-400">{student.totalPoints.toLocaleString('ar-SA')}</span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="font-bold text-emerald-300">{student.totalPages.toLocaleString('ar-SA')}</span>
                     </td>
                     <td className="px-4 py-3 text-sm text-emerald-400/50">{student.lastDate ? formatShortDate(student.lastDate) : '—'}</td>
                   </motion.tr>

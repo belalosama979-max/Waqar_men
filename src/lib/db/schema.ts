@@ -33,6 +33,7 @@ CREATE TABLE IF NOT EXISTS students (
   teacher_id INTEGER REFERENCES teachers(id) ON DELETE SET NULL,
   teacher_name TEXT,
   total_points INTEGER DEFAULT 0,
+  total_pages INTEGER DEFAULT 0,
   last_recitation TEXT,
   last_date TIMESTAMPTZ,
   created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -51,6 +52,11 @@ CREATE TABLE IF NOT EXISTS recitations (
   part INTEGER,
   surah INTEGER,
   surah_name TEXT,
+  from_page INTEGER,
+  to_page INTEGER,
+  from_ayah INTEGER,
+  to_ayah INTEGER,
+  pages_count INTEGER DEFAULT 0,
   evaluation TEXT NOT NULL,
   eval_points INTEGER DEFAULT 0,
   extra_points INTEGER DEFAULT 0,
@@ -58,6 +64,16 @@ CREATE TABLE IF NOT EXISTS recitations (
   notes TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- ==========================================
+-- SQL Commands to update existing tables (run in Supabase SQL Editor):
+-- ALTER TABLE students ADD COLUMN IF NOT EXISTS total_pages INTEGER DEFAULT 0;
+-- ALTER TABLE recitations ADD COLUMN IF NOT EXISTS from_page INTEGER;
+-- ALTER TABLE recitations ADD COLUMN IF NOT EXISTS to_page INTEGER;
+-- ALTER TABLE recitations ADD COLUMN IF NOT EXISTS from_ayah INTEGER;
+-- ALTER TABLE recitations ADD COLUMN IF NOT EXISTS to_ayah INTEGER;
+-- ALTER TABLE recitations ADD COLUMN IF NOT EXISTS pages_count INTEGER DEFAULT 0;
+-- ==========================================
 
 -- Settings table
 CREATE TABLE IF NOT EXISTS settings (

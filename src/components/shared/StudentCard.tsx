@@ -42,9 +42,14 @@ export function StudentCard({ student, index = 0, onRecitationSaved, onClick }: 
             <h3 className="font-bold text-emerald-100 truncate group-hover:text-emerald-300 transition-colors">
               {student.name}
             </h3>
-            {student.teacherName && (
-              <p className="text-xs text-emerald-500/50 truncate">{student.teacherName}</p>
-            )}
+            <div className="flex items-center gap-2 mt-1">
+              {student.teacherName && (
+                <p className="text-[10px] text-emerald-500/50 truncate">{student.teacherName}</p>
+              )}
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400/80 border border-emerald-500/20">
+                {student.course || 'المساق الحر'}
+              </span>
+            </div>
           </div>
           {student.totalPoints > 0 && (
             <div className="flex items-center gap-1 text-gold-400">
@@ -94,10 +99,14 @@ export function StudentCard({ student, index = 0, onRecitationSaved, onClick }: 
           >
             <div className="flex items-center justify-center gap-1 mb-0.5">
               <BookOpen className="w-3 h-3 text-emerald-400" />
-              <span className="text-[10px] sm:text-xs text-emerald-400/60">صفحة</span>
+              <span className="text-[10px] sm:text-xs text-emerald-400/60">
+                {student.course === 'الأربعين البخارية' ? 'حديث' : 'صفحة'}
+              </span>
             </div>
             <p className="text-base sm:text-lg font-bold text-emerald-300">
-              {student.totalPages.toLocaleString('ar-SA')}
+              {student.course === 'الأربعين البخارية' 
+                ? (student.totalHadiths || 0).toLocaleString('ar-SA')
+                : (student.totalPages || 0).toLocaleString('ar-SA')}
             </p>
           </div>
         </div>

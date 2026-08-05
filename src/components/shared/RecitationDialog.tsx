@@ -41,6 +41,13 @@ export function RecitationDialog({ student, open, onClose, onSaved }: Recitation
   const [extraPoints, setExtraPoints] = useState<number>(0);
   const [evaluationOptions, setEvaluationOptions] = useState<EvaluationOption[]>(DEFAULT_EVALUATIONS);
   const [currentEvalPoints, setCurrentEvalPoints] = useState<number>(60);
+  
+  // New fields
+  const [hadithsDetails, setHadithsDetails] = useState<string>('');
+  const [hadithsCount, setHadithsCount] = useState<number | ''>('');
+  const [isAdditional, setIsAdditional] = useState<boolean>(false);
+
+  const isHadithCourse = student.course === 'الأربعين البخارية';
 
 
   useEffect(() => {
@@ -57,6 +64,10 @@ export function RecitationDialog({ student, open, onClose, onSaved }: Recitation
       setToAyah('');
       setEvaluation('ممتاز_جداً');
       setExtraPoints(0);
+      setHadithsDetails('');
+      setHadithsCount('');
+      setIsAdditional(false);
+      setType(student.course === 'الأربعين البخارية' ? 'حديث' : 'جزء');
 
       // Load custom evaluation points from settings
       settingsRepository.getEvaluationPoints().then((pts) => {
@@ -84,21 +95,24 @@ export function RecitationDialog({ student, open, onClose, onSaved }: Recitation
     setSaving(true);
     try {
       const selectedSurah = QURAN_SURAHS.find((s) => s.index === surahIndex);
-      const recitationLabel =
-        type === 'جزء'
+      const recitationLabel = isHadithCourse 
+        ? `أحاديث: ${hadithsDetails}` 
+        : (type === 'جزء'
           ? `الجزء ${part}`
-          : selectedSurah?.arabicName || `سورة ${surahIndex}`;
+          : selectedSurah?.arabicName || `سورة ${surahIndex}`);
 
       let calculatedPages = 0;
-      if (type === 'جزء') {
-        const p1 = Number(fromPage) || 0;
-        const p2 = Number(toPage) || 0;
-        calculatedPages = Math.max(0, p2 - p1 + 1);
-      } else {
-        const a1 = Number(fromAyah) || 0;
-        const a2 = Number(toAyah) || 0;
-        if (a1 > 0 && a2 >= a1) {
-          calculatedPages = calculatePagesCount(surahIndex, a1, surahIndex, a2);
+      if (!isHadithCourse) {
+        if (type === 'جزء') {
+          const p1 = Number(fromPage) || 0;
+          const p2 = Number(toPage) || 0;
+          calculatedPages = Math.max(0, p2 - p1 + 1);
+        } else {
+          const a1 = Number(fromAyah) || 0;
+          const a2 = Number(toAyah) || 0;
+          if (a1 > 0 && a2 >= a1) {
+            calculatedPages = calculatePagesCount(surahIndex, a1, surahIndex, a2);
+          }
         }
       }
 
@@ -107,16 +121,20 @@ export function RecitationDialog({ student, open, onClose, onSaved }: Recitation
         studentName: student.name,
         teacherId: user.id,
         teacherName: user.name,
+        course: student.course,
         date: new Date(date),
-        type,
-        part: type === 'جزء' ? part : undefined,
-        surah: type === 'سورة' ? surahIndex : undefined,
+        type: isHadithCourse ? 'حديث' : type,
+        part: !isHadithCourse && type === 'جزء' ? part : undefined,
+        surah: !isHadithCourse && type === 'سورة' ? surahIndex : undefined,
         surahName: recitationLabel,
-        fromPage: type === 'جزء' && fromPage !== '' ? Number(fromPage) : undefined,
-        toPage: type === 'جزء' && toPage !== '' ? Number(toPage) : undefined,
-        fromAyah: type === 'سورة' && fromAyah !== '' ? Number(fromAyah) : undefined,
-        toAyah: type === 'سورة' && toAyah !== '' ? Number(toAyah) : undefined,
+        fromPage: !isHadithCourse && type === 'جزء' && fromPage !== '' ? Number(fromPage) : undefined,
+        toPage: !isHadithCourse && type === 'جزء' && toPage !== '' ? Number(toPage) : undefined,
+        fromAyah: !isHadithCourse && type === 'سورة' && fromAyah !== '' ? Number(fromAyah) : undefined,
+        toAyah: !isHadithCourse && type === 'سورة' && toAyah !== '' ? Number(toAyah) : undefined,
         pagesCount: calculatedPages,
+        hadithsCount: isHadithCourse ? Number(hadithsCount) : 0,
+        hadithsDetails: isHadithCourse ? hadithsDetails : undefined,
+        isAdditional: !isHadithCourse ? isAdditional : false,
         evaluation,
         evalPoints: currentEvalPoints,
         extraPoints: extraPoints || 0,
@@ -124,7 +142,14 @@ export function RecitationDialog({ student, open, onClose, onSaved }: Recitation
         createdAt: new Date(),
       });
 
-      await studentsRepository.addPointsAndPages(student.id!, totalPoints, calculatedPages, recitationLabel, new Date(date));
+      await studentsRepository.addPointsAndPages(
+        student.id!, 
+        totalPoints, 
+        calculatedPages, 
+        isHadithCourse ? Number(hadithsCount) : 0, 
+        recitationLabel, 
+        new Date(date)
+      );
 
       toast.success(`تم تسجيل تسميع ${student.name} بنجاح! ✨`, {
         description: `${recitationLabel} — ${evaluationOptions.find(e => e.key === evaluation)?.label} — ${totalPoints} نقطة`,
@@ -257,125 +282,148 @@ export function RecitationDialog({ student, open, onClose, onSaved }: Recitation
                         <h3 className="font-semibold text-emerald-200">نوع التسميع</h3>
                       </div>
 
-                      {/* Type Selection */}
-                      <div className="flex gap-3">
-                        {(['جزء', 'سورة'] as RecitationType[]).map((t) => (
-                          <button
-                            key={t}
-                            onClick={() => setType(t)}
-                            className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all ${
-                              type === t
-                                ? 'bg-emerald-600/30 text-emerald-300 border-2 border-emerald-500/50'
-                                : 'text-emerald-400/50 border border-emerald-500/15 hover:bg-emerald-900/20'
-                            }`}
-                          >
-                            {t === 'جزء' ? '📖 جزء' : '📝 سورة'}
-                          </button>
-                        ))}
-                      </div>
-
-                      {/* Part/Surah Dropdown & Inputs */}
-                      {type === 'جزء' ? (
-                        <div className="space-y-3">
+                      {isHadithCourse ? (
+                        <div className="space-y-4">
                           <div>
-                            <label className="text-xs text-emerald-400/60 mb-1.5 block">اختر الجزء</label>
-                            <select
-                              value={part}
-                              onChange={(e) => setPart(Number(e.target.value))}
-                              className="select-glass"
-                            >
-                              {QURAN_PARTS.map((p) => (
-                                <option key={p.index} value={p.index}>
-                                  {p.label}
-                                </option>
-                              ))}
-                            </select>
+                            <label className="text-xs text-emerald-400/60 mb-1.5 block">أرقام الأحاديث المسمعة (مثال: 1-5 أو 1,3)</label>
+                            <input type="text" value={hadithsDetails} onChange={(e) => setHadithsDetails(e.target.value)} className="input-glass" placeholder="مثال: 1-5" />
                           </div>
-                          <div className="flex gap-3">
-                            <div className="flex-1">
-                              <label className="text-xs text-emerald-400/60 mb-1.5 block">من صفحة</label>
-                              <input
-                                type="number"
-                                min={1}
-                                max={604}
-                                value={fromPage}
-                                onChange={(e) => setFromPage(e.target.value === '' ? '' : Number(e.target.value))}
-                                className="input-glass"
-                                placeholder="1"
-                              />
-                            </div>
-                            <div className="flex-1">
-                              <label className="text-xs text-emerald-400/60 mb-1.5 block">إلى صفحة</label>
-                              <input
-                                type="number"
-                                min={1}
-                                max={604}
-                                value={toPage}
-                                onChange={(e) => setToPage(e.target.value === '' ? '' : Number(e.target.value))}
-                                className="input-glass"
-                                placeholder="20"
-                              />
-                            </div>
+                          <div>
+                            <label className="text-xs text-emerald-400/60 mb-1.5 block">عدد الأحاديث التي تم تسميعها</label>
+                            <input type="number" min={1} value={hadithsCount} onChange={(e) => setHadithsCount(e.target.value === '' ? '' : Number(e.target.value))} className="input-glass" placeholder="عدد الأحاديث" />
                           </div>
                         </div>
                       ) : (
-                        <div className="space-y-3">
-                          <div>
-                            <label className="text-xs text-emerald-400/60 mb-1.5 block">اختر السورة</label>
-                            <select
-                              value={surahIndex}
-                              onChange={(e) => setSurahIndex(Number(e.target.value))}
-                              className="select-glass"
-                              size={1}
-                            >
-                              {QURAN_SURAHS.map((s) => (
-                                <option key={s.index} value={s.index}>
-                                  {s.index}. {s.arabicName}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
+                        <>
+                          {/* Type Selection */}
                           <div className="flex gap-3">
-                            <div className="flex-1">
-                              <label className="text-xs text-emerald-400/60 mb-1.5 block">من آية</label>
-                              <input
-                                type="number"
-                                min={1}
-                                value={fromAyah}
-                                onChange={(e) => setFromAyah(e.target.value === '' ? '' : Number(e.target.value))}
-                                className="input-glass"
-                                placeholder="1"
-                              />
+                            {(['جزء', 'سورة'] as RecitationType[]).map((t) => (
+                              <button
+                                key={t}
+                                onClick={() => setType(t)}
+                                className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all ${
+                                  type === t
+                                    ? 'bg-emerald-600/30 text-emerald-300 border-2 border-emerald-500/50'
+                                    : 'text-emerald-400/50 border border-emerald-500/15 hover:bg-emerald-900/20'
+                                }`}
+                              >
+                                {t === 'جزء' ? '📖 جزء' : '📝 سورة'}
+                              </button>
+                            ))}
+                          </div>
+
+                          {/* Part/Surah Dropdown & Inputs */}
+                          {type === 'جزء' ? (
+                            <div className="space-y-3 mt-4">
+                              <div>
+                                <label className="text-xs text-emerald-400/60 mb-1.5 block">اختر الجزء</label>
+                                <select
+                                  value={part}
+                                  onChange={(e) => setPart(Number(e.target.value))}
+                                  className="select-glass"
+                                >
+                                  {QURAN_PARTS.map((p) => (
+                                    <option key={p.index} value={p.index}>
+                                      {p.label}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                              <div className="flex gap-3">
+                                <div className="flex-1">
+                                  <label className="text-xs text-emerald-400/60 mb-1.5 block">من صفحة</label>
+                                  <input
+                                    type="number"
+                                    min={1}
+                                    max={604}
+                                    value={fromPage}
+                                    onChange={(e) => setFromPage(e.target.value === '' ? '' : Number(e.target.value))}
+                                    className="input-glass"
+                                    placeholder="1"
+                                  />
+                                </div>
+                                <div className="flex-1">
+                                  <label className="text-xs text-emerald-400/60 mb-1.5 block">إلى صفحة</label>
+                                  <input
+                                    type="number"
+                                    min={1}
+                                    max={604}
+                                    value={toPage}
+                                    onChange={(e) => setToPage(e.target.value === '' ? '' : Number(e.target.value))}
+                                    className="input-glass"
+                                    placeholder="20"
+                                  />
+                                </div>
+                              </div>
                             </div>
-                            <div className="flex-1">
-                              <label className="text-xs text-emerald-400/60 mb-1.5 block">إلى آية</label>
-                              <input
-                                type="number"
-                                min={1}
-                                value={toAyah}
-                                onChange={(e) => setToAyah(e.target.value === '' ? '' : Number(e.target.value))}
-                                className="input-glass"
-                                placeholder="286"
-                              />
+                          ) : (
+                            <div className="space-y-3 mt-4">
+                              <div>
+                                <label className="text-xs text-emerald-400/60 mb-1.5 block">اختر السورة</label>
+                                <select
+                                  value={surahIndex}
+                                  onChange={(e) => setSurahIndex(Number(e.target.value))}
+                                  className="select-glass"
+                                  size={1}
+                                >
+                                  {QURAN_SURAHS.map((s) => (
+                                    <option key={s.index} value={s.index}>
+                                      {s.index}. {s.arabicName}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                              <div className="flex gap-3">
+                                <div className="flex-1">
+                                  <label className="text-xs text-emerald-400/60 mb-1.5 block">من آية</label>
+                                  <input
+                                    type="number"
+                                    min={1}
+                                    value={fromAyah}
+                                    onChange={(e) => setFromAyah(e.target.value === '' ? '' : Number(e.target.value))}
+                                    className="input-glass"
+                                    placeholder="1"
+                                  />
+                                </div>
+                                <div className="flex-1">
+                                  <label className="text-xs text-emerald-400/60 mb-1.5 block">إلى آية</label>
+                                  <input
+                                    type="number"
+                                    min={1}
+                                    value={toAyah}
+                                    onChange={(e) => setToAyah(e.target.value === '' ? '' : Number(e.target.value))}
+                                    className="input-glass"
+                                    placeholder="286"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                          
+                          {/* Additional Recitation Toggle */}
+                          <div className="p-3 mt-2 rounded-xl bg-emerald-900/10 border border-emerald-500/10 flex items-center justify-between cursor-pointer" onClick={() => setIsAdditional(!isAdditional)}>
+                            <span className="text-sm text-emerald-300">تسميع مطلوب إضافي؟</span>
+                            <div className={`w-5 h-5 rounded-md flex items-center justify-center border transition-colors ${isAdditional ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-emerald-500/30'}`}>
+                              {isAdditional && <Check className="w-3.5 h-3.5" />}
                             </div>
                           </div>
-                        </div>
-                      )}
-                      
-                      {/* Calculated Pages Info */}
-                      {type === 'جزء' && fromPage !== '' && toPage !== '' && Number(toPage) >= Number(fromPage) && (
-                        <div className="p-3 mt-2 rounded-xl bg-emerald-900/20 border border-emerald-500/20 flex items-center justify-between">
-                          <span className="text-sm text-emerald-300">عدد الصفحات المحسوبة:</span>
-                          <span className="font-bold text-emerald-400">{Math.max(0, Number(toPage) - Number(fromPage) + 1)}</span>
-                        </div>
-                      )}
-                      {type === 'سورة' && fromAyah !== '' && toAyah !== '' && Number(toAyah) >= Number(fromAyah) && (
-                        <div className="p-3 mt-2 rounded-xl bg-emerald-900/20 border border-emerald-500/20 flex items-center justify-between">
-                          <span className="text-sm text-emerald-300">عدد الصفحات المحسوبة:</span>
-                          <span className="font-bold text-emerald-400">
-                            {calculatePagesCount(surahIndex, Number(fromAyah), surahIndex, Number(toAyah))}
-                          </span>
-                        </div>
+
+                          {/* Calculated Pages Info */}
+                          {type === 'جزء' && fromPage !== '' && toPage !== '' && Number(toPage) >= Number(fromPage) && (
+                            <div className="p-3 mt-2 rounded-xl bg-emerald-900/20 border border-emerald-500/20 flex items-center justify-between">
+                              <span className="text-sm text-emerald-300">عدد الصفحات المحسوبة:</span>
+                              <span className="font-bold text-emerald-400">{Math.max(0, Number(toPage) - Number(fromPage) + 1)}</span>
+                            </div>
+                          )}
+                          {type === 'سورة' && fromAyah !== '' && toAyah !== '' && Number(toAyah) >= Number(fromAyah) && (
+                            <div className="p-3 mt-2 rounded-xl bg-emerald-900/20 border border-emerald-500/20 flex items-center justify-between">
+                              <span className="text-sm text-emerald-300">عدد الصفحات المحسوبة:</span>
+                              <span className="font-bold text-emerald-400">
+                                {calculatePagesCount(surahIndex, Number(fromAyah), surahIndex, Number(toAyah))}
+                              </span>
+                            </div>
+                          )}
+                        </>
                       )}
                     </motion.div>
                   )}

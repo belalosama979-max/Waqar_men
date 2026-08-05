@@ -9,6 +9,8 @@ function mapStudent(row: Record<string, unknown>): Student {
     teacherName: row.teacher_name as string | undefined,
     totalPoints: (row.total_points as number) ?? 0,
     totalPages: (row.total_pages as number) ?? 0,
+    totalHadiths: (row.total_hadiths as number) ?? 0,
+    course: (row.course as any) || 'المساق الحر',
     lastRecitation: row.last_recitation as string | null,
     lastDate: row.last_date ? new Date(row.last_date as string) : null,
     createdAt: new Date((row.created_at as string) || Date.now()),
@@ -66,7 +68,7 @@ export const studentsRepository = {
     }
   },
 
-  async getLeaderboard(teacherId?: number): Promise<Student[]> {
+  async getLeaderboard(teacherId?: number, course?: string): Promise<Student[]> {
     try {
       let query = supabase
         .from('students')
@@ -74,6 +76,9 @@ export const studentsRepository = {
         .order('total_points', { ascending: false });
       if (teacherId) {
         query = query.eq('teacher_id', teacherId);
+      }
+      if (course && course !== 'جميع المساقات (مشتركة)') {
+        query = query.eq('course', course);
       }
       const { data, error } = await query;
       if (error) {
@@ -94,8 +99,10 @@ export const studentsRepository = {
         name: student.name,
         teacher_id: student.teacherId,
         teacher_name: student.teacherName,
+        course: student.course,
         total_points: student.totalPoints ?? 0,
         total_pages: student.totalPages ?? 0,
+        total_hadiths: student.totalHadiths ?? 0,
         last_recitation: student.lastRecitation,
         last_date: student.lastDate?.toISOString() ?? null,
         created_at: new Date().toISOString(),
@@ -112,8 +119,10 @@ export const studentsRepository = {
     if (changes.name !== undefined) patch.name = changes.name;
     if (changes.teacherId !== undefined) patch.teacher_id = changes.teacherId;
     if (changes.teacherName !== undefined) patch.teacher_name = changes.teacherName;
+    if (changes.course !== undefined) patch.course = changes.course;
     if (changes.totalPoints !== undefined) patch.total_points = changes.totalPoints;
     if (changes.totalPages !== undefined) patch.total_pages = changes.totalPages;
+    if (changes.totalHadiths !== undefined) patch.total_hadiths = changes.totalHadiths;
     if (changes.lastRecitation !== undefined) patch.last_recitation = changes.lastRecitation;
     if (changes.lastDate !== undefined) patch.last_date = changes.lastDate?.toISOString() ?? null;
 
@@ -156,18 +165,20 @@ export const studentsRepository = {
     }
   },
 
-  async addPointsAndPages(studentId: number, points: number, pages: number, surahName?: string, date?: Date): Promise<void> {
+  async addPointsAndPages(studentId: number, points: number, pages: number, hadiths: number = 0, surahName?: string, date?: Date): Promise<void> {
     const { data: current } = await supabase
       .from('students')
-      .select('total_points, total_pages')
+      .select('total_points, total_pages, total_hadiths')
       .eq('id', studentId)
       .single();
     const newTotalPoints = ((current?.total_points as number) ?? 0) + points;
     const newTotalPages = ((current?.total_pages as number) ?? 0) + pages;
+    const newTotalHadiths = ((current?.total_hadiths as number) ?? 0) + hadiths;
 
     const patch: Record<string, unknown> = {
       total_points: newTotalPoints,
       total_pages: newTotalPages,
+      total_hadiths: newTotalHadiths,
       updated_at: new Date().toISOString(),
     };
     if (surahName) patch.last_recitation = surahName;

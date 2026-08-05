@@ -8,7 +8,8 @@ import { studentsRepository, teachersRepository } from '@/lib/db';
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 import { TableSkeleton } from '@/components/shared/Skeleton';
 import { formatShortDate } from '@/lib/utils';
-import type { Student, Teacher } from '@/types';
+import { COURSES_LIST } from '@/types';
+import type { Student, Teacher, CourseType } from '@/types';
 
 export default function AdminStudentsPage() {
   const [students, setStudents] = useState<Student[]>([]);
@@ -20,7 +21,7 @@ export default function AdminStudentsPage() {
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [transferStudent, setTransferStudent] = useState<Student | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Student | null>(null);
-  const [form, setForm] = useState({ name: '', teacherId: '' });
+  const [form, setForm] = useState<{ name: string; teacherId: string; course: CourseType }>({ name: '', teacherId: '', course: 'المساق الحر' });
   const [newTeacherId, setNewTeacherId] = useState('');
   const [saving, setSaving] = useState(false);
 
@@ -44,13 +45,13 @@ export default function AdminStudentsPage() {
 
   const openAdd = () => {
     setEditingStudent(null);
-    setForm({ name: '', teacherId: teachers[0] ? String(teachers[0].id) : '' });
+    setForm({ name: '', teacherId: teachers[0] ? String(teachers[0].id) : '', course: 'المساق الحر' });
     setFormOpen(true);
   };
 
   const openEdit = (student: Student) => {
     setEditingStudent(student);
-    setForm({ name: student.name, teacherId: String(student.teacherId) });
+    setForm({ name: student.name, teacherId: String(student.teacherId), course: student.course || 'المساق الحر' });
     setFormOpen(true);
   };
 
@@ -67,6 +68,7 @@ export default function AdminStudentsPage() {
           name: form.name,
           teacherId: Number(form.teacherId),
           teacherName: teacher?.name,
+          course: form.course,
         });
         toast.success('تم تعديل الطالب بنجاح');
       } else {
@@ -74,7 +76,10 @@ export default function AdminStudentsPage() {
           name: form.name,
           teacherId: Number(form.teacherId),
           teacherName: teacher?.name,
+          course: form.course,
           totalPoints: 0,
+          totalPages: 0,
+          totalHadiths: 0,
           lastRecitation: null,
           lastDate: null,
           createdAt: new Date(),
@@ -172,7 +177,10 @@ export default function AdminStudentsPage() {
                         <div className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm flex-shrink-0" style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.15)' }}>
                           {student.name.charAt(0)}
                         </div>
-                        <span className="font-medium text-emerald-100">{student.name}</span>
+                        <div className="flex flex-col">
+                          <span className="font-medium text-emerald-100">{student.name}</span>
+                          <span className="text-[10px] text-emerald-500/60">{student.course || 'المساق الحر'}</span>
+                        </div>
                       </div>
                     </td>
                     <td className="px-4 py-3 text-sm text-emerald-300/60">{student.teacherName || '—'}</td>
@@ -224,6 +232,12 @@ export default function AdminStudentsPage() {
                     <select value={form.teacherId} onChange={(e) => setForm({ ...form, teacherId: e.target.value })} className="select-glass">
                       <option value="">— اختر المعلم —</option>
                       {teachers.map((t) => <option key={t.id} value={String(t.id)}>{t.name}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-sm text-emerald-300/70 mb-1.5 block">المساق</label>
+                    <select value={form.course} onChange={(e) => setForm({ ...form, course: e.target.value as CourseType })} className="select-glass">
+                      {COURSES_LIST.map((c) => <option key={c} value={c}>{c}</option>)}
                     </select>
                   </div>
                   <div className="flex gap-3 pt-2">

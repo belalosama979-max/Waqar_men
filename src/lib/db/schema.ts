@@ -32,8 +32,10 @@ CREATE TABLE IF NOT EXISTS students (
   name TEXT NOT NULL,
   teacher_id INTEGER REFERENCES teachers(id) ON DELETE SET NULL,
   teacher_name TEXT,
+  course TEXT NOT NULL DEFAULT 'المساق الحر',
   total_points INTEGER DEFAULT 0,
   total_pages INTEGER DEFAULT 0,
+  total_hadiths INTEGER DEFAULT 0,
   last_recitation TEXT,
   last_date TIMESTAMPTZ,
   created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -47,6 +49,7 @@ CREATE TABLE IF NOT EXISTS recitations (
   student_name TEXT,
   teacher_id INTEGER,
   teacher_name TEXT,
+  course TEXT NOT NULL DEFAULT 'المساق الحر',
   date TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   type TEXT NOT NULL DEFAULT 'سورة',
   part INTEGER,
@@ -57,6 +60,9 @@ CREATE TABLE IF NOT EXISTS recitations (
   from_ayah INTEGER,
   to_ayah INTEGER,
   pages_count INTEGER DEFAULT 0,
+  hadiths_count INTEGER DEFAULT 0,
+  hadiths_details TEXT,
+  is_additional BOOLEAN DEFAULT false,
   evaluation TEXT NOT NULL,
   eval_points INTEGER DEFAULT 0,
   extra_points INTEGER DEFAULT 0,
@@ -68,11 +74,17 @@ CREATE TABLE IF NOT EXISTS recitations (
 -- ==========================================
 -- SQL Commands to update existing tables (run in Supabase SQL Editor):
 -- ALTER TABLE students ADD COLUMN IF NOT EXISTS total_pages INTEGER DEFAULT 0;
+-- ALTER TABLE students ADD COLUMN IF NOT EXISTS course TEXT NOT NULL DEFAULT 'المساق الحر';
+-- ALTER TABLE students ADD COLUMN IF NOT EXISTS total_hadiths INTEGER DEFAULT 0;
 -- ALTER TABLE recitations ADD COLUMN IF NOT EXISTS from_page INTEGER;
 -- ALTER TABLE recitations ADD COLUMN IF NOT EXISTS to_page INTEGER;
 -- ALTER TABLE recitations ADD COLUMN IF NOT EXISTS from_ayah INTEGER;
 -- ALTER TABLE recitations ADD COLUMN IF NOT EXISTS to_ayah INTEGER;
 -- ALTER TABLE recitations ADD COLUMN IF NOT EXISTS pages_count INTEGER DEFAULT 0;
+-- ALTER TABLE recitations ADD COLUMN IF NOT EXISTS course TEXT NOT NULL DEFAULT 'المساق الحر';
+-- ALTER TABLE recitations ADD COLUMN IF NOT EXISTS hadiths_count INTEGER DEFAULT 0;
+-- ALTER TABLE recitations ADD COLUMN IF NOT EXISTS hadiths_details TEXT;
+-- ALTER TABLE recitations ADD COLUMN IF NOT EXISTS is_additional BOOLEAN DEFAULT false;
 -- ==========================================
 
 -- Settings table

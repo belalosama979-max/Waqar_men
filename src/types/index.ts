@@ -26,6 +26,8 @@ export interface Student {
   teacherName?: string; // denormalized for display
   totalPoints: number;
   totalPages: number;
+  totalHadiths: number;
+  course: CourseType;
   lastRecitation: string | null; // e.g. "جزء 1" or "سورة الفاتحة"
   lastDate: Date | null;
   createdAt: Date;
@@ -38,6 +40,7 @@ export interface Recitation {
   studentName?: string; // denormalized for display
   teacherId: number;
   teacherName?: string; // denormalized for display
+  course: CourseType;
   date: Date;
   type: RecitationType;
   part?: number; // 1-30 if type === 'جزء'
@@ -48,6 +51,9 @@ export interface Recitation {
   fromAyah?: number;
   toAyah?: number;
   pagesCount: number;
+  hadithsCount: number;
+  hadithsDetails?: string;
+  isAdditional: boolean;
   evaluation: EvaluationKey;
   evalPoints: number;
   extraPoints: number;
@@ -66,7 +72,11 @@ export interface AppSettings {
 // Enum-like types
 // =========================================
 
-export type RecitationType = 'جزء' | 'سورة';
+export type RecitationType = 'جزء' | 'سورة' | 'حديث';
+
+export type CourseType = 'المساق الحر' | 'آلاء الرحمن' | 'الأربعين البخارية';
+
+export const COURSES_LIST: CourseType[] = ['المساق الحر', 'آلاء الرحمن', 'الأربعين البخارية'];
 
 export type EvaluationKey =
   | 'ممتاز_جداً'
@@ -165,6 +175,9 @@ export interface RecitationFormData {
   fromAyah?: number;
   toAyah?: number;
   pagesCount?: number;
+  hadithsCount?: number;
+  hadithsDetails?: string;
+  isAdditional?: boolean;
   evaluation: EvaluationKey;
   extraPoints: number;
   notes?: string;
@@ -178,6 +191,7 @@ export interface TeacherFormData {
 export interface StudentFormData {
   name: string;
   teacherId: number;
+  course: CourseType;
 }
 
 // =========================================

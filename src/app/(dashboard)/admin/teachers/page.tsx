@@ -8,7 +8,6 @@ import { teachersRepository, studentsRepository } from '@/lib/db';
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 import { generateTeacherPassword } from '@/lib/utils';
 import { TableSkeleton } from '@/components/shared/Skeleton';
-import { COURSES_LIST } from '@/types';
 import type { Teacher, CourseType } from '@/types';
 
 interface TeacherFormState {
@@ -262,7 +261,7 @@ export default function AdminTeachersPage() {
                       onChange={(e) => setForm({ ...form, course: e.target.value as CourseType })}
                       className="select-glass w-full"
                     >
-                      {COURSES_LIST.map((c) => (
+                      {['المساق الحر', 'آلاء الرحمن', 'الأربعين البخارية'].map((c) => (
                         <option key={c} value={c}>{c}</option>
                       ))}
                     </select>

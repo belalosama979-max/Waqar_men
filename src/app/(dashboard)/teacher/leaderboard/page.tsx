@@ -7,7 +7,6 @@ import { useAuthStore } from '@/store/authStore';
 import { studentsRepository } from '@/lib/db';
 import { formatShortDate, getRankEmoji } from '@/lib/utils';
 import { TableSkeleton } from '@/components/shared/Skeleton';
-import { COURSES_LIST } from '@/types';
 import type { Student } from '@/types';
 
 export default function TeacherLeaderboardPage() {
@@ -75,7 +74,7 @@ export default function TeacherLeaderboardPage() {
       <div className="flex gap-3">
         <select value={selectedCourse} onChange={(e) => setSelectedCourse(e.target.value)} className="select-glass w-full">
           <option value="جميع المساقات (مشتركة)">جميع المساقات (مشتركة)</option>
-          {COURSES_LIST.map((c) => <option key={c} value={c}>{c}</option>)}
+          {['المساق الحر', 'آلاء الرحمن', 'الأربعين البخارية'].map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
       </div>
 

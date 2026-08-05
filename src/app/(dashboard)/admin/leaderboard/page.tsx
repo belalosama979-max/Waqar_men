@@ -6,7 +6,6 @@ import { Trophy, Medal, Globe } from 'lucide-react';
 import { studentsRepository, teachersRepository } from '@/lib/db';
 import { formatShortDate, getRankEmoji } from '@/lib/utils';
 import { TableSkeleton } from '@/components/shared/Skeleton';
-import { COURSES_LIST } from '@/types';
 import type { Student, Teacher } from '@/types';
 
 export default function AdminLeaderboardPage() {
@@ -97,7 +96,7 @@ export default function AdminLeaderboardPage() {
       <div className="flex gap-3 flex-col sm:flex-row">
         <select value={selectedCourse} onChange={(e) => setSelectedCourse(e.target.value)} className="select-glass flex-1">
           <option value="جميع المساقات (مشتركة)">جميع المساقات (مشتركة)</option>
-          {COURSES_LIST.map((c) => <option key={c} value={c}>{c}</option>)}
+          {['المساق الحر', 'آلاء الرحمن', 'الأربعين البخارية'].map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
         {tab === 'byTeacher' && (
           <select value={selectedTeacher} onChange={(e) => setSelectedTeacher(e.target.value)} className="select-glass flex-1">

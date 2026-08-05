@@ -8,7 +8,6 @@ import { studentsRepository, teachersRepository } from '@/lib/db';
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 import { TableSkeleton } from '@/components/shared/Skeleton';
 import { formatShortDate } from '@/lib/utils';
-import { COURSES_LIST } from '@/types';
 import type { Student, Teacher, CourseType } from '@/types';
 
 export default function AdminStudentsPage() {
@@ -236,8 +235,12 @@ export default function AdminStudentsPage() {
                   </div>
                   <div>
                     <label className="text-sm text-emerald-300/70 mb-1.5 block">المساق</label>
-                    <select value={form.course} onChange={(e) => setForm({ ...form, course: e.target.value as CourseType })} className="select-glass">
-                      {COURSES_LIST.map((c) => <option key={c} value={c}>{c}</option>)}
+                    <select
+                      value={form.course}
+                      onChange={(e) => setForm({ ...form, course: e.target.value as any })}
+                      className="select-glass w-full"
+                    >
+                      {['المساق الحر', 'آلاء الرحمن', 'الأربعين البخارية'].map((c) => <option key={c} value={c}>{c}</option>)}
                     </select>
                   </div>
                   <div className="flex gap-3 pt-2">

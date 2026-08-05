@@ -240,7 +240,7 @@ export default function AdminStudentsPage() {
                       onChange={(e) => setForm({ ...form, course: e.target.value as any })}
                       className="select-glass w-full"
                     >
-                      {['المساق الحر', 'آلاء الرحمن', 'الأربعين البخارية'].map((c) => <option key={c} value={c}>{c}</option>)}
+                      {['المساق الحر', 'آلاء الرحمن', 'الأربعين البخارية', 'الأربعين النووية'].map((c) => <option key={c} value={c}>{c}</option>)}
                     </select>
                   </div>
                   <div className="flex gap-3 pt-2">

@@ -75,9 +75,9 @@ export interface AppSettings {
 
 export type RecitationType = 'جزء' | 'سورة' | 'حديث';
 
-export type CourseType = 'المساق الحر' | 'آلاء الرحمن' | 'الأربعين البخارية';
+export type CourseType = 'المساق الحر' | 'آلاء الرحمن' | 'الأربعين البخارية' | 'الأربعين النووية';
 
-export const COURSES_LIST: CourseType[] = ['المساق الحر', 'آلاء الرحمن', 'الأربعين البخارية'];
+export const COURSES_LIST: CourseType[] = ['المساق الحر', 'آلاء الرحمن', 'الأربعين البخارية', 'الأربعين النووية'];
 
 export type EvaluationKey =
   | 'ممتاز_جداً'

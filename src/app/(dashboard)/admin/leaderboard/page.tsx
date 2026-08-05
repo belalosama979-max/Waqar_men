@@ -96,7 +96,7 @@ export default function AdminLeaderboardPage() {
       <div className="flex gap-3 flex-col sm:flex-row">
         <select value={selectedCourse} onChange={(e) => setSelectedCourse(e.target.value)} className="select-glass flex-1">
           <option value="جميع المساقات (مشتركة)">جميع المساقات (مشتركة)</option>
-          {['المساق الحر', 'آلاء الرحمن', 'الأربعين البخارية'].map((c) => <option key={c} value={c}>{c}</option>)}
+          {['المساق الحر', 'آلاء الرحمن', 'الأربعين البخارية', 'الأربعين النووية'].map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
         {tab === 'byTeacher' && (
           <select value={selectedTeacher} onChange={(e) => setSelectedTeacher(e.target.value)} className="select-glass flex-1">

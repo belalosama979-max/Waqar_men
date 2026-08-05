@@ -74,7 +74,7 @@ export default function TeacherLeaderboardPage() {
       <div className="flex gap-3">
         <select value={selectedCourse} onChange={(e) => setSelectedCourse(e.target.value)} className="select-glass w-full">
           <option value="جميع المساقات (مشتركة)">جميع المساقات (مشتركة)</option>
-          {['المساق الحر', 'آلاء الرحمن', 'الأربعين البخارية'].map((c) => <option key={c} value={c}>{c}</option>)}
+          {['المساق الحر', 'آلاء الرحمن', 'الأربعين البخارية', 'الأربعين النووية'].map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
       </div>
 

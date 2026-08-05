@@ -261,7 +261,7 @@ export default function AdminTeachersPage() {
                       onChange={(e) => setForm({ ...form, course: e.target.value as CourseType })}
                       className="select-glass w-full"
                     >
-                      {['المساق الحر', 'آلاء الرحمن', 'الأربعين البخارية'].map((c) => (
+                      {['المساق الحر', 'آلاء الرحمن', 'الأربعين البخارية', 'الأربعين النووية'].map((c) => (
                         <option key={c} value={c}>{c}</option>
                       ))}
                     </select>

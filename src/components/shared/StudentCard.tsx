@@ -100,11 +100,11 @@ export function StudentCard({ student, index = 0, onRecitationSaved, onClick }: 
             <div className="flex items-center justify-center gap-1 mb-0.5">
               <BookOpen className="w-3 h-3 text-emerald-400" />
               <span className="text-[10px] sm:text-xs text-emerald-400/60">
-                {student.course === 'الأربعين البخارية' ? 'حديث' : 'صفحة'}
+                {student.course === 'الأربعين البخارية' || student.course === 'الأربعين النووية' ? 'حديث' : 'صفحة'}
               </span>
             </div>
             <p className="text-base sm:text-lg font-bold text-emerald-300">
-              {student.course === 'الأربعين البخارية' 
+              {student.course === 'الأربعين البخارية' || student.course === 'الأربعين النووية'
                 ? (student.totalHadiths || 0).toLocaleString('ar-SA')
                 : (student.totalPages || 0).toLocaleString('ar-SA')}
             </p>

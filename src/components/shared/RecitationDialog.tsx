@@ -47,7 +47,7 @@ export function RecitationDialog({ student, open, onClose, onSaved }: Recitation
   const [hadithsCount, setHadithsCount] = useState<number | ''>('');
   const [isAdditional, setIsAdditional] = useState<boolean>(false);
 
-  const isHadithCourse = student.course === 'الأربعين البخارية';
+  const isHadithCourse = student.course === 'الأربعين البخارية' || student.course === 'الأربعين النووية';
 
 
   useEffect(() => {
@@ -67,7 +67,7 @@ export function RecitationDialog({ student, open, onClose, onSaved }: Recitation
       setHadithsDetails('');
       setHadithsCount('');
       setIsAdditional(false);
-      setType(student.course === 'الأربعين البخارية' ? 'حديث' : 'جزء');
+      setType(student.course === 'الأربعين البخارية' || student.course === 'الأربعين النووية' ? 'حديث' : 'جزء');
 
       // Load custom evaluation points from settings
       settingsRepository.getEvaluationPoints().then((pts) => {

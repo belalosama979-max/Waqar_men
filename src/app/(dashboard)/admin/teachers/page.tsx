@@ -8,12 +8,13 @@ import { teachersRepository, studentsRepository } from '@/lib/db';
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 import { generateTeacherPassword } from '@/lib/utils';
 import { TableSkeleton } from '@/components/shared/Skeleton';
-import type { Teacher } from '@/types';
+import { COURSES_LIST } from '@/types';
+import type { Teacher, CourseType } from '@/types';
 
 interface TeacherFormState {
   name: string;
   username: string;
-  course: import('@/types').CourseType;
+  course: CourseType;
 }
 
 export default function AdminTeachersPage() {
@@ -258,10 +259,10 @@ export default function AdminTeachersPage() {
                     <label className="text-sm text-emerald-300/70 mb-1.5 block">مساق المعلم</label>
                     <select
                       value={form.course}
-                      onChange={(e) => setForm({ ...form, course: e.target.value as import('@/types').CourseType })}
+                      onChange={(e) => setForm({ ...form, course: e.target.value as CourseType })}
                       className="select-glass w-full"
                     >
-                      {import('@/types').COURSES_LIST?.map((c) => (
+                      {COURSES_LIST.map((c) => (
                         <option key={c} value={c}>{c}</option>
                       ))}
                     </select>

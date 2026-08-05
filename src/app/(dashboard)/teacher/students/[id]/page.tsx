@@ -53,13 +53,19 @@ export default function StudentProfilePage() {
 
   useEffect(() => { load(); }, [load]);
 
-  const handleDeleteRecitation = async (recId: number, pointsToDeduct: number) => {
+  const handleDeleteRecitation = async (rec: Recitation) => {
     if (!confirm('هل أنت متأكد من التراجع عن هذا التسميع وخصم النقاط الخاصة به؟')) return;
     
-    setDeletingId(recId);
+    setDeletingId(rec.id!);
     try {
-      await recitationsRepository.delete(recId);
-      await studentsRepository.addPoints(studentId, -pointsToDeduct);
+      await recitationsRepository.delete(rec.id!);
+      await studentsRepository.addPointsAndPages(
+        studentId, 
+        -rec.totalPoints, 
+        -(rec.pagesCount || 0), 
+        -(rec.hadithsCount || 0)
+      );
+      await studentsRepository.recalculateLastRecitation(studentId);
       toast.success('تم التراجع عن التسميع وخصم النقاط بنجاح');
       load();
     } catch {
@@ -234,7 +240,7 @@ export default function StudentProfilePage() {
                       {getEvaluationLabel(rec.evaluation)}
                     </span>
                     <button
-                      onClick={() => handleDeleteRecitation(rec.id, rec.totalPoints)}
+                      onClick={() => handleDeleteRecitation(rec)}
                       disabled={deletingId === rec.id}
                       className="p-1.5 rounded-lg text-red-400/50 hover:text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-50"
                       title="تراجع عن التسميع"

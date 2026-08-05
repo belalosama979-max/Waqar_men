@@ -190,4 +190,26 @@ export const studentsRepository = {
       .eq('id', studentId);
     if (error) throw new Error(error.message || 'فشل تحديث بيانات الطالب');
   },
+
+  async recalculateLastRecitation(studentId: number): Promise<void> {
+    const { data: latest } = await supabase
+      .from('recitations')
+      .select('surah_name, date')
+      .eq('student_id', studentId)
+      .order('date', { ascending: false })
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+    
+    const patch: Record<string, unknown> = {
+      last_recitation: latest ? latest.surah_name : null,
+      last_date: latest ? latest.date : null,
+      updated_at: new Date().toISOString(),
+    };
+
+    await supabase
+      .from('students')
+      .update(patch)
+      .eq('id', studentId);
+  },
 };

@@ -13,6 +13,7 @@ import type { Teacher } from '@/types';
 interface TeacherFormState {
   name: string;
   username: string;
+  course: import('@/types').CourseType;
 }
 
 export default function AdminTeachersPage() {
@@ -21,7 +22,7 @@ export default function AdminTeachersPage() {
   const [loading, setLoading] = useState(true);
   const [formOpen, setFormOpen] = useState(false);
   const [editingTeacher, setEditingTeacher] = useState<Teacher | null>(null);
-  const [form, setForm] = useState<TeacherFormState>({ name: '', username: '' });
+  const [form, setForm] = useState<TeacherFormState>({ name: '', username: '', course: 'المساق الحر' });
   const [deleteTarget, setDeleteTarget] = useState<Teacher | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -40,13 +41,13 @@ export default function AdminTeachersPage() {
 
   const openAdd = () => {
     setEditingTeacher(null);
-    setForm({ name: '', username: '' });
+    setForm({ name: '', username: '', course: 'المساق الحر' });
     setFormOpen(true);
   };
 
   const openEdit = (teacher: Teacher) => {
     setEditingTeacher(teacher);
-    setForm({ name: teacher.name, username: teacher.username });
+    setForm({ name: teacher.name, username: teacher.username, course: teacher.course || 'المساق الحر' });
     setFormOpen(true);
   };
 
@@ -61,15 +62,17 @@ export default function AdminTeachersPage() {
         await teachersRepository.update(editingTeacher.id!, {
           name: form.name,
           username: form.username || form.name.split(' ')[0],
+          course: form.course,
         });
         toast.success('تم تعديل المعلم بنجاح');
       } else {
-        const username = form.name.split(' ')[0];
+        const username = form.username || form.name.split(' ')[0];
         const password = generateTeacherPassword(form.name);
         await teachersRepository.add({
           name: form.name,
           username,
           password,
+          course: form.course,
           createdAt: new Date(),
           updatedAt: new Date(),
         });
@@ -138,6 +141,7 @@ export default function AdminTeachersPage() {
                 <tr style={{ borderBottom: '1px solid rgba(16,185,129,0.1)' }}>
                   <th className="px-4 py-3 text-right text-xs font-semibold text-emerald-400/60">#</th>
                   <th className="px-4 py-3 text-right text-xs font-semibold text-emerald-400/60">الاسم</th>
+                  <th className="px-4 py-3 text-right text-xs font-semibold text-emerald-400/60">المساق</th>
                   <th className="px-4 py-3 text-right text-xs font-semibold text-emerald-400/60">اسم المستخدم</th>
                   <th className="px-4 py-3 text-right text-xs font-semibold text-emerald-400/60">الطلاب</th>
                   <th className="px-4 py-3 text-right text-xs font-semibold text-emerald-400/60">الإجراءات</th>
@@ -162,6 +166,11 @@ export default function AdminTeachersPage() {
                         </div>
                         <span className="font-medium text-emerald-100">{teacher.name}</span>
                       </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`badge ${teacher.course === 'الأربعين البخارية' ? 'bg-amber-500/15 text-amber-400 border-amber-500/25' : 'bg-blue-500/15 text-blue-400 border-blue-500/25'}`}>
+                        {teacher.course || 'المساق الحر'}
+                      </span>
                     </td>
                     <td className="px-4 py-3 text-sm text-emerald-300/60">{teacher.username}</td>
                     <td className="px-4 py-3">
@@ -244,6 +253,18 @@ export default function AdminTeachersPage() {
                       className="input-glass"
                       placeholder="إذا تركته فارغاً سيتم استخدام الاسم الأول"
                     />
+                  </div>
+                  <div>
+                    <label className="text-sm text-emerald-300/70 mb-1.5 block">مساق المعلم</label>
+                    <select
+                      value={form.course}
+                      onChange={(e) => setForm({ ...form, course: e.target.value as import('@/types').CourseType })}
+                      className="select-glass w-full"
+                    >
+                      {import('@/types').COURSES_LIST?.map((c) => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
                   </div>
                   {!editingTeacher && (
                     <div className="p-3 rounded-xl" style={{ background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.15)' }}>

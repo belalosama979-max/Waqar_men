@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS teachers (
   name TEXT NOT NULL,
   username TEXT UNIQUE NOT NULL,
   password TEXT NOT NULL,
+  course TEXT NOT NULL DEFAULT 'المساق الحر',
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -85,6 +86,7 @@ CREATE TABLE IF NOT EXISTS recitations (
 -- ALTER TABLE recitations ADD COLUMN IF NOT EXISTS hadiths_count INTEGER DEFAULT 0;
 -- ALTER TABLE recitations ADD COLUMN IF NOT EXISTS hadiths_details TEXT;
 -- ALTER TABLE recitations ADD COLUMN IF NOT EXISTS is_additional BOOLEAN DEFAULT false;
+-- ALTER TABLE teachers ADD COLUMN IF NOT EXISTS course TEXT NOT NULL DEFAULT 'المساق الحر';
 -- ==========================================
 
 -- Settings table

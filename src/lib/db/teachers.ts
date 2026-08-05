@@ -7,6 +7,7 @@ function mapTeacher(row: Record<string, unknown>): Teacher {
     name: row.name as string,
     username: row.username as string,
     password: row.password as string,
+    course: (row.course as any) || 'المساق الحر',
     createdAt: new Date((row.created_at as string) || Date.now()),
     updatedAt: new Date((row.updated_at as string) || Date.now()),
   };
@@ -65,6 +66,7 @@ export const teachersRepository = {
         name: teacher.name,
         username: teacher.username,
         password: teacher.password,
+        course: teacher.course || 'المساق الحر',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })
@@ -81,6 +83,7 @@ export const teachersRepository = {
         ...(changes.name && { name: changes.name }),
         ...(changes.username && { username: changes.username }),
         ...(changes.password && { password: changes.password }),
+        ...(changes.course && { course: changes.course }),
         updated_at: new Date().toISOString(),
       })
       .eq('id', id);

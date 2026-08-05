@@ -15,6 +15,7 @@ export interface Teacher {
   name: string;
   username: string;
   password: string;
+  course: CourseType;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -186,6 +187,7 @@ export interface RecitationFormData {
 export interface TeacherFormData {
   name: string;
   username: string;
+  course: CourseType;
 }
 
 export interface StudentFormData {

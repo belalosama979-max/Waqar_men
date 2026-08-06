@@ -135,79 +135,134 @@ export default function AdminTeachersPage() {
             <p className="text-emerald-400/50">لا يوجد معلمون بعد</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr style={{ borderBottom: '1px solid rgba(16,185,129,0.1)' }}>
-                  <th className="px-4 py-3 text-right text-xs font-semibold text-emerald-400/60">#</th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold text-emerald-400/60">الاسم</th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold text-emerald-400/60">المساق</th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold text-emerald-400/60">اسم المستخدم</th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold text-emerald-400/60">الطلاب</th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold text-emerald-400/60">الإجراءات</th>
-                </tr>
-              </thead>
-              <tbody>
-                {teachers.map((teacher, idx) => (
-                  <motion.tr
-                    key={teacher.id}
-                    className="table-row-hover"
-                    style={{ borderBottom: '1px solid rgba(16,185,129,0.05)' }}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: idx * 0.03 }}
-                  >
-                    <td className="px-4 py-3 text-sm text-emerald-500/50">{idx + 1}</td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm flex-shrink-0"
-                          style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.15)' }}>
-                          {teacher.name.charAt(0)}
+          <>
+            {/* Mobile view: cards */}
+            <div className="md:hidden divide-y divide-emerald-500/5">
+              {teachers.map((teacher, idx) => (
+                <motion.div
+                  key={teacher.id}
+                  className="p-3"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: idx * 0.03 }}
+                >
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm flex-shrink-0"
+                      style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.15)' }}>
+                      {teacher.name.charAt(0)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-emerald-100 truncate text-sm">{teacher.name}</p>
+                      <p className="text-xs text-emerald-400/50">{teacher.username}</p>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={() => openEdit(teacher)}
+                        className="p-2 rounded-lg text-emerald-400/50 hover:text-emerald-400 hover:bg-emerald-500/10 transition-all"
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleResetPassword(teacher)}
+                        className="p-2 rounded-lg text-gold-400/50 hover:text-gold-400 hover:bg-gold-500/10 transition-all"
+                      >
+                        <Key className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => setDeleteTarget(teacher)}
+                        className="p-2 rounded-lg text-red-400/50 hover:text-red-400 hover:bg-red-500/10 transition-all"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 pr-13">
+                    <span className={`badge ${teacher.course === 'الأربعين البخارية' ? 'bg-amber-500/15 text-amber-400 border-amber-500/25' : 'bg-blue-500/15 text-blue-400 border-blue-500/25'}`}>
+                      {teacher.course || 'المساق الحر'}
+                    </span>
+                    <span className="badge bg-emerald-500/15 text-emerald-400 border-emerald-500/25">
+                      {studentCounts[teacher.id!] || 0} طالب
+                    </span>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+
+            {/* Desktop view: full table */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr style={{ borderBottom: '1px solid rgba(16,185,129,0.1)' }}>
+                    <th className="px-4 py-3 text-right text-xs font-semibold text-emerald-400/60">#</th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold text-emerald-400/60">الاسم</th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold text-emerald-400/60">المساق</th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold text-emerald-400/60">اسم المستخدم</th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold text-emerald-400/60">الطلاب</th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold text-emerald-400/60">الإجراءات</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {teachers.map((teacher, idx) => (
+                    <motion.tr
+                      key={teacher.id}
+                      className="table-row-hover"
+                      style={{ borderBottom: '1px solid rgba(16,185,129,0.05)' }}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: idx * 0.03 }}
+                    >
+                      <td className="px-4 py-3 text-sm text-emerald-500/50">{idx + 1}</td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm flex-shrink-0"
+                            style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.15)' }}>
+                            {teacher.name.charAt(0)}
+                          </div>
+                          <span className="font-medium text-emerald-100">{teacher.name}</span>
                         </div>
-                        <span className="font-medium text-emerald-100">{teacher.name}</span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className={`badge ${teacher.course === 'الأربعين البخارية' ? 'bg-amber-500/15 text-amber-400 border-amber-500/25' : 'bg-blue-500/15 text-blue-400 border-blue-500/25'}`}>
-                        {teacher.course || 'المساق الحر'}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-emerald-300/60">{teacher.username}</td>
-                    <td className="px-4 py-3">
-                      <span className="badge bg-emerald-500/15 text-emerald-400 border-emerald-500/25">
-                        {studentCounts[teacher.id!] || 0} طالب
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          onClick={() => openEdit(teacher)}
-                          className="p-1.5 rounded-lg text-emerald-400/50 hover:text-emerald-400 hover:bg-emerald-500/10 transition-all"
-                          title="تعديل"
-                        >
-                          <Pencil className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleResetPassword(teacher)}
-                          className="p-1.5 rounded-lg text-gold-400/50 hover:text-gold-400 hover:bg-gold-500/10 transition-all"
-                          title="إعادة تعيين كلمة المرور"
-                        >
-                          <Key className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => setDeleteTarget(teacher)}
-                          className="p-1.5 rounded-lg text-red-400/50 hover:text-red-400 hover:bg-red-500/10 transition-all"
-                          title="حذف"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </motion.tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={`badge ${teacher.course === 'الأربعين البخارية' ? 'bg-amber-500/15 text-amber-400 border-amber-500/25' : 'bg-blue-500/15 text-blue-400 border-blue-500/25'}`}>
+                          {teacher.course || 'المساق الحر'}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-emerald-300/60">{teacher.username}</td>
+                      <td className="px-4 py-3">
+                        <span className="badge bg-emerald-500/15 text-emerald-400 border-emerald-500/25">
+                          {studentCounts[teacher.id!] || 0} طالب
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={() => openEdit(teacher)}
+                            className="p-1.5 rounded-lg text-emerald-400/50 hover:text-emerald-400 hover:bg-emerald-500/10 transition-all"
+                            title="تعديل"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleResetPassword(teacher)}
+                            className="p-1.5 rounded-lg text-gold-400/50 hover:text-gold-400 hover:bg-gold-500/10 transition-all"
+                            title="إعادة تعيين كلمة المرور"
+                          >
+                            <Key className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => setDeleteTarget(teacher)}
+                            className="p-1.5 rounded-lg text-red-400/50 hover:text-red-400 hover:bg-red-500/10 transition-all"
+                            title="حذف"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </motion.tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
 

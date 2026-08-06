@@ -1,14 +1,17 @@
 {
   "name": "نظام إدارة تسميع القرآن الكريم",
-  "short_name": "تسميع القرآن",
-  "description": "نظام متكامل لإدارة تسميع القرآن الكريم للطلاب",
+  "short_name": "وقار",
+  "description": "نظام متكامل لإدارة تسميع القرآن الكريم للطلاب - تتبع التقدم والنقاط والتقييمات",
   "start_url": "/",
+  "id": "/",
   "display": "standalone",
-  "background_color": "#0a0f0a",
+  "display_override": ["standalone", "minimal-ui"],
+  "background_color": "#080d08",
   "theme_color": "#065f46",
   "orientation": "portrait-primary",
   "lang": "ar",
   "dir": "rtl",
+  "scope": "/",
   "icons": [
     {
       "src": "/icons/icon-192.png",
@@ -23,6 +26,14 @@
       "purpose": "maskable any"
     }
   ],
-  "screenshots": [],
-  "categories": ["education", "productivity"]
+  "shortcuts": [
+    {
+      "name": "تسجيل الدخول",
+      "short_name": "دخول",
+      "url": "/login",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ],
+  "categories": ["education", "productivity"],
+  "prefer_related_applications": false
 }

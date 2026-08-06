@@ -33,7 +33,9 @@ export const viewport: Viewport = {
   themeColor: '#065f46',
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+  viewportFit: 'cover',
 };
 
 export default function RootLayout({
@@ -50,6 +52,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+        <meta name="apple-touch-fullscreen" content="yes" />
       </head>
       <body className={`${cairo.variable} font-sans antialiased`}>
         <Providers>{children}</Providers>

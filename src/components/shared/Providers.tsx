@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { Toaster } from 'sonner';
 import { seedDatabase } from '@/lib/db';
+import { InstallBanner } from './InstallBanner';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   useEffect(() => {
@@ -26,6 +27,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
           },
         }}
       />
+      <InstallBanner />
     </>
   );
 }

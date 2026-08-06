@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Mic, Star, Calendar, Award, BookOpen } from 'lucide-react';
+import { Mic, Star, Calendar, Award, BookOpen, Pencil, Trash2 } from 'lucide-react';
 import { RecitationDialog } from './RecitationDialog';
 import { formatShortDate } from '@/lib/utils';
 import type { Student } from '@/types';
@@ -12,21 +12,54 @@ interface StudentCardProps {
   index?: number;
   onRecitationSaved?: () => void;
   onClick?: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
 }
 
-export function StudentCard({ student, index = 0, onRecitationSaved, onClick }: StudentCardProps) {
+export function StudentCard({ student, index = 0, onRecitationSaved, onClick, onEdit, onDelete }: StudentCardProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
+
+  const isHadithCourse = student.course === 'الأربعين البخارية' || student.course === 'الأربعين النووية';
 
   return (
     <>
       <motion.div
-        className="glass-card p-5 flex flex-col gap-4 cursor-pointer group"
+        className="glass-card p-5 flex flex-col gap-4 cursor-pointer group relative"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: index * 0.05, duration: 0.4 }}
         whileHover={{ y: -4, boxShadow: '0 20px 40px rgba(0,0,0,0.4), 0 0 30px rgba(16,185,129,0.1)' }}
         onClick={onClick}
       >
+        {/* Edit/Delete buttons — top-left corner */}
+        {(onEdit || onDelete) && (
+          <div
+            className="absolute top-3 left-3 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {onEdit && (
+              <motion.button
+                onClick={onEdit}
+                className="p-1.5 rounded-lg text-emerald-400/60 hover:text-emerald-400 hover:bg-emerald-500/15 transition-all"
+                whileTap={{ scale: 0.9 }}
+                title="تعديل"
+              >
+                <Pencil className="w-3.5 h-3.5" />
+              </motion.button>
+            )}
+            {onDelete && (
+              <motion.button
+                onClick={onDelete}
+                className="p-1.5 rounded-lg text-red-400/60 hover:text-red-400 hover:bg-red-500/15 transition-all"
+                whileTap={{ scale: 0.9 }}
+                title="حذف"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </motion.button>
+            )}
+          </div>
+        )}
+
         {/* Header */}
         <div className="flex items-center gap-3">
           <div
@@ -100,11 +133,11 @@ export function StudentCard({ student, index = 0, onRecitationSaved, onClick }: 
             <div className="flex items-center justify-center gap-1 mb-0.5">
               <BookOpen className="w-3 h-3 text-emerald-400" />
               <span className="text-[10px] sm:text-xs text-emerald-400/60">
-                {student.course === 'الأربعين البخارية' || student.course === 'الأربعين النووية' ? 'حديث' : 'صفحة'}
+                {isHadithCourse ? 'حديث' : 'صفحة'}
               </span>
             </div>
             <p className="text-base sm:text-lg font-bold text-emerald-300">
-              {student.course === 'الأربعين البخارية' || student.course === 'الأربعين النووية'
+              {isHadithCourse
                 ? (student.totalHadiths || 0).toLocaleString('ar-SA')
                 : (student.totalPages || 0).toLocaleString('ar-SA')}
             </p>

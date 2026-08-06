@@ -141,7 +141,7 @@ export default function AdminLeaderboardPage() {
 
       {/* Full Table */}
       <div className="glass-card overflow-hidden">
-        <div className="p-4 border-b border-emerald-500/10">
+        <div className="p-3 md:p-4 border-b border-emerald-500/10">
           <h3 className="font-semibold text-emerald-200">الترتيب الكامل</h3>
         </div>
         {loading ? (
@@ -152,51 +152,96 @@ export default function AdminLeaderboardPage() {
             <p className="text-emerald-400/50">لا يوجد طلاب</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr style={{ borderBottom: '1px solid rgba(16,185,129,0.1)' }}>
-                  <th className="px-4 py-3 text-right text-xs font-semibold text-emerald-400/60">الترتيب</th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold text-emerald-400/60">الطالب</th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold text-emerald-400/60">المعلم</th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold text-emerald-400/60">النقاط</th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold text-emerald-400/60">الصفحات</th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold text-emerald-400/60">الأحاديث</th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold text-emerald-400/60">آخر تسميع</th>
-                </tr>
-              </thead>
-              <tbody>
-                {displayedStudents.map((student, idx) => (
-                  <motion.tr key={student.id} className="table-row-hover" style={{ borderBottom: '1px solid rgba(16,185,129,0.05)' }} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: idx * 0.02 }}>
-                    <td className="px-4 py-3">
-                      <span className={`text-lg font-bold ${idx < 3 ? 'text-gold-400' : 'text-emerald-500/50'}`}>
-                        {getRankEmoji(idx + 1)}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm flex-shrink-0" style={{ background: idx < 3 ? 'rgba(251,191,36,0.15)' : 'rgba(16,185,129,0.1)', border: idx < 3 ? '1px solid rgba(251,191,36,0.25)' : '1px solid rgba(16,185,129,0.15)' }}>
-                          {student.name.charAt(0)}
+          <>
+            {/* Mobile view: compact list */}
+            <div className="md:hidden divide-y divide-emerald-500/5">
+              {displayedStudents.map((student, idx) => (
+                <motion.div
+                  key={student.id}
+                  className="flex items-center gap-3 px-3 py-3"
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: idx * 0.02 }}
+                >
+                  <span className={`text-base font-bold w-8 text-center flex-shrink-0 ${idx < 3 ? 'text-gold-400' : 'text-emerald-500/50'}`}>
+                    {getRankEmoji(idx + 1)}
+                  </span>
+                  <div
+                    className="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm flex-shrink-0"
+                    style={{
+                      background: idx < 3 ? 'rgba(251,191,36,0.15)' : 'rgba(16,185,129,0.1)',
+                      border: idx < 3 ? '1px solid rgba(251,191,36,0.25)' : '1px solid rgba(16,185,129,0.15)'
+                    }}
+                  >
+                    {student.name.charAt(0)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className={`font-semibold text-sm truncate ${idx < 3 ? 'text-gold-200' : 'text-emerald-100'}`}>
+                      {student.name}
+                    </p>
+                    <p className="text-xs text-emerald-400/50 truncate">{student.teacherName || '—'}</p>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <p className="font-bold text-gold-400 text-sm">
+                      {sortBy === 'points' ? student.totalPoints.toLocaleString('ar-SA')
+                        : sortBy === 'hadiths' ? (student.totalHadiths?.toLocaleString('ar-SA') || '0')
+                        : student.totalPages.toLocaleString('ar-SA')}
+                    </p>
+                    <p className="text-[10px] text-emerald-500/40">
+                      {sortBy === 'points' ? 'نقطة' : sortBy === 'hadiths' ? 'حديث' : 'صفحة'}
+                    </p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+
+            {/* Desktop view: full table */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr style={{ borderBottom: '1px solid rgba(16,185,129,0.1)' }}>
+                    <th className="px-4 py-3 text-right text-xs font-semibold text-emerald-400/60">الترتيب</th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold text-emerald-400/60">الطالب</th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold text-emerald-400/60">المعلم</th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold text-emerald-400/60">النقاط</th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold text-emerald-400/60">الصفحات</th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold text-emerald-400/60">الأحاديث</th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold text-emerald-400/60">آخر تسميع</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {displayedStudents.map((student, idx) => (
+                    <motion.tr key={student.id} className="table-row-hover" style={{ borderBottom: '1px solid rgba(16,185,129,0.05)' }} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: idx * 0.02 }}>
+                      <td className="px-4 py-3">
+                        <span className={`text-lg font-bold ${idx < 3 ? 'text-gold-400' : 'text-emerald-500/50'}`}>
+                          {getRankEmoji(idx + 1)}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm flex-shrink-0" style={{ background: idx < 3 ? 'rgba(251,191,36,0.15)' : 'rgba(16,185,129,0.1)', border: idx < 3 ? '1px solid rgba(251,191,36,0.25)' : '1px solid rgba(16,185,129,0.15)' }}>
+                            {student.name.charAt(0)}
+                          </div>
+                          <span className={`font-medium ${idx < 3 ? 'text-gold-200' : 'text-emerald-100'}`}>{student.name}</span>
                         </div>
-                        <span className={`font-medium ${idx < 3 ? 'text-gold-200' : 'text-emerald-100'}`}>{student.name}</span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-emerald-300/60">{student.teacherName || '—'}</td>
-                    <td className="px-4 py-3">
-                      <span className="font-bold text-gold-400">{student.totalPoints.toLocaleString('ar-SA')}</span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="font-bold text-emerald-300">{student.totalPages.toLocaleString('ar-SA')}</span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="font-bold text-emerald-300">{student.totalHadiths?.toLocaleString('ar-SA') || '0'}</span>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-emerald-400/50">{student.lastDate ? formatShortDate(student.lastDate) : '—'}</td>
-                  </motion.tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-emerald-300/60">{student.teacherName || '—'}</td>
+                      <td className="px-4 py-3">
+                        <span className="font-bold text-gold-400">{student.totalPoints.toLocaleString('ar-SA')}</span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="font-bold text-emerald-300">{student.totalPages.toLocaleString('ar-SA')}</span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="font-bold text-emerald-300">{student.totalHadiths?.toLocaleString('ar-SA') || '0'}</span>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-emerald-400/50">{student.lastDate ? formatShortDate(student.lastDate) : '—'}</td>
+                    </motion.tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
     </div>

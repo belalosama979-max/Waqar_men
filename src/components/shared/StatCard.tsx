@@ -14,20 +14,19 @@ interface StatCardProps {
   delay?: number;
 }
 
-function AnimatedCounter({ value, duration = 1 }: { value: number; duration?: number }) {
+function AnimatedCounter({ value, duration = 0.9 }: { value: number; duration?: number }) {
   const [count, setCount] = useState(0);
   const startTime = useRef<number | null>(null);
   const animRef = useRef<number | null>(null);
 
   useEffect(() => {
+    startTime.current = null;
     const animate = (timestamp: number) => {
       if (!startTime.current) startTime.current = timestamp;
       const progress = Math.min((timestamp - startTime.current) / (duration * 1000), 1);
       const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
       setCount(Math.round(eased * value));
-      if (progress < 1) {
-        animRef.current = requestAnimationFrame(animate);
-      }
+      if (progress < 1) animRef.current = requestAnimationFrame(animate);
     };
     animRef.current = requestAnimationFrame(animate);
     return () => {
@@ -39,38 +38,10 @@ function AnimatedCounter({ value, duration = 1 }: { value: number; duration?: nu
 }
 
 const colorMap = {
-  emerald: {
-    bg: 'rgba(6,95,70,0.15)',
-    border: 'rgba(16,185,129,0.2)',
-    icon: 'text-emerald-400',
-    iconBg: 'rgba(16,185,129,0.15)',
-    glow: 'rgba(16,185,129,0.1)',
-    value: 'text-emerald-300',
-  },
-  gold: {
-    bg: 'rgba(180,83,9,0.1)',
-    border: 'rgba(251,191,36,0.2)',
-    icon: 'text-gold-400',
-    iconBg: 'rgba(251,191,36,0.15)',
-    glow: 'rgba(251,191,36,0.1)',
-    value: 'text-gold-300',
-  },
-  blue: {
-    bg: 'rgba(29,78,216,0.1)',
-    border: 'rgba(96,165,250,0.2)',
-    icon: 'text-blue-400',
-    iconBg: 'rgba(96,165,250,0.15)',
-    glow: 'rgba(96,165,250,0.1)',
-    value: 'text-blue-300',
-  },
-  purple: {
-    bg: 'rgba(109,40,217,0.1)',
-    border: 'rgba(167,139,250,0.2)',
-    icon: 'text-purple-400',
-    iconBg: 'rgba(167,139,250,0.15)',
-    glow: 'rgba(167,139,250,0.1)',
-    value: 'text-purple-300',
-  },
+  emerald: { accent: '#34d399', tint: 'rgba(16,185,129,0.14)', ring: 'rgba(52,211,153,0.22)', value: 'text-emerald-50' },
+  gold: { accent: '#e3bd62', tint: 'rgba(217,180,90,0.14)', ring: 'rgba(217,180,90,0.28)', value: 'text-gold-200' },
+  blue: { accent: '#7cc4fa', tint: 'rgba(96,165,250,0.12)', ring: 'rgba(96,165,250,0.22)', value: 'text-sky-50' },
+  purple: { accent: '#c4b5fd', tint: 'rgba(167,139,250,0.12)', ring: 'rgba(167,139,250,0.22)', value: 'text-violet-50' },
 };
 
 export function StatCard({
@@ -82,50 +53,38 @@ export function StatCard({
   animateCount = true,
   delay = 0,
 }: StatCardProps) {
-  const colors = colorMap[color];
+  const c = colorMap[color];
   const isNumber = typeof value === 'number';
 
   return (
     <motion.div
-      className="relative overflow-hidden rounded-2xl p-5 cursor-default"
-      style={{
-        background: `rgba(10, 20, 12, 0.7)`,
-        backdropFilter: 'blur(20px)',
-        border: `1px solid ${colors.border}`,
-        boxShadow: `0 8px 32px rgba(0,0,0,0.3), 0 0 30px ${colors.glow}`,
-      }}
-      initial={{ opacity: 0, y: 20 }}
+      className="glass-card relative overflow-hidden p-4 md:p-5"
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay, duration: 0.4, ease: 'easeOut' }}
-      whileHover={{ y: -3, boxShadow: `0 16px 40px rgba(0,0,0,0.4), 0 0 40px ${colors.glow}` }}
+      transition={{ delay, duration: 0.35, ease: 'easeOut' }}
     >
-      {/* Background decoration */}
-      <div
-        className="absolute -top-8 -left-8 w-32 h-32 rounded-full opacity-20 blur-2xl"
-        style={{ background: `radial-gradient(circle, ${colors.iconBg}, transparent)` }}
-      />
+      {/* accent line along the leading edge */}
+      <span className="absolute top-4 bottom-4 right-0 w-[3px] rounded-l-full" style={{ background: c.accent, opacity: 0.85 }} />
 
-      <div className="relative flex items-start justify-between">
-        <div className="flex-1">
-          <p className="text-sm text-emerald-300/60 font-medium mb-1">{title}</p>
-          <p className={cn('text-3xl font-bold', colors.value)}>
-            {isNumber && animateCount ? (
-              <AnimatedCounter value={value as number} />
-            ) : (
-              isNumber ? (value as number).toLocaleString('ar-SA') : value
-            )}
-          </p>
-          {subtitle && (
-            <p className="text-xs text-emerald-400/40 mt-1">{subtitle}</p>
-          )}
-        </div>
+      <div className="relative flex items-start justify-between gap-2">
         <div
-          className={cn('p-3 rounded-xl flex-shrink-0', colors.icon)}
-          style={{ background: colors.iconBg, border: `1px solid ${colors.border}` }}
+          className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 [&_svg]:w-5 [&_svg]:h-5"
+          style={{ background: c.tint, border: `1px solid ${c.ring}`, color: c.accent }}
         >
           {icon}
         </div>
       </div>
+      <p className={cn('relative mt-3 text-[1.7rem] md:text-3xl font-extrabold leading-none tabular-nums', c.value)}>
+        {isNumber && animateCount ? (
+          <AnimatedCounter value={value as number} />
+        ) : isNumber ? (
+          (value as number).toLocaleString('ar-SA')
+        ) : (
+          value
+        )}
+      </p>
+      <p className="relative mt-1.5 text-[13px] text-emerald-200/60 font-semibold truncate">{title}</p>
+      {subtitle && <p className="relative text-xs text-emerald-400/40 mt-0.5 truncate">{subtitle}</p>}
     </motion.div>
   );
 }

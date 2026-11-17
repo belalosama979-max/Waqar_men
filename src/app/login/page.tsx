@@ -4,10 +4,11 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
-import { BookOpen, Lock, User, Eye, EyeOff, ChevronDown } from 'lucide-react';
+import { Lock, User, Eye, EyeOff, ChevronDown, ShieldCheck, GraduationCap } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { teachersRepository, adminRepository } from '@/lib/db';
 import { ADMIN_NAME } from '@/lib/constants';
+import { BrandMark } from '@/components/shared/BrandMark';
 import type { Teacher } from '@/types';
 
 export default function LoginPage() {
@@ -35,28 +36,24 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
 
-    await new Promise((r) => setTimeout(r, 600)); // smooth UX
-
     try {
       if (loginMode === 'admin') {
         const isValid = await adminRepository.verifyAdmin(adminUsername, password);
         if (isValid) {
           login({ id: 0, name: ADMIN_NAME, role: 'admin', username: adminUsername });
           toast.success('مرحباً بك يا مشرف! 🌟');
-          router.push('/admin');
+          router.replace('/admin');
         } else {
           toast.error('بيانات الدخول غير صحيحة');
         }
       } else {
         if (!selectedTeacherId) {
           toast.error('الرجاء اختيار اسم المعلم');
-          setLoading(false);
           return;
         }
         const teacher = teachers.find((t) => String(t.id) === selectedTeacherId);
         if (!teacher) {
           toast.error('المعلم غير موجود');
-          setLoading(false);
           return;
         }
         if (teacher.password === password) {
@@ -67,7 +64,7 @@ export default function LoginPage() {
             username: teacher.username,
           });
           toast.success(`مرحباً بك يا ${teacher.name}! 🌟`);
-          router.push('/teacher');
+          router.replace('/teacher');
         } else {
           toast.error('كلمة المرور غير صحيحة');
         }
@@ -77,106 +74,107 @@ export default function LoginPage() {
     }
   };
 
-  return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
-      {/* Animated Background */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <motion.div
-          className="absolute -top-40 -right-40 w-96 h-96 bg-emerald-800/20 rounded-full blur-3xl"
-          animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
-          transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
-        />
-        <motion.div
-          className="absolute -bottom-40 -left-40 w-96 h-96 bg-emerald-900/20 rounded-full blur-3xl"
-          animate={{ scale: [1.2, 1, 1.2], opacity: [0.3, 0.5, 0.3] }}
-          transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
-        />
-        <motion.div
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gold-900/5 rounded-full blur-3xl"
-          animate={{ rotate: 360 }}
-          transition={{ duration: 60, repeat: Infinity, ease: 'linear' }}
-        />
-        {/* Islamic Pattern Dots */}
-        <div className="absolute inset-0 opacity-5"
-          style={{
-            backgroundImage: `radial-gradient(rgba(16,185,129,0.5) 1px, transparent 1px)`,
-            backgroundSize: '40px 40px',
-          }}
-        />
-      </div>
+  const modes = [
+    { key: 'teacher' as const, label: 'معلم', Icon: GraduationCap },
+    { key: 'admin' as const, label: 'مشرف', Icon: ShieldCheck },
+  ];
 
-      <motion.div
-        initial={{ opacity: 0, y: 40 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: 'easeOut' }}
-        className="w-full max-w-md mx-4"
+  return (
+    <div className="min-h-dvh flex flex-col relative overflow-hidden">
+      {/* Hero */}
+      <div
+        className="relative flex flex-col items-center justify-end text-center px-6 pb-16"
+        style={{
+          minHeight: '42dvh',
+          paddingTop: 'max(3rem, var(--safe-area-inset-top, env(safe-area-inset-top)))',
+          background:
+            'radial-gradient(120% 90% at 50% 0%, rgba(16,140,100,0.45) 0%, rgba(6,60,44,0.35) 45%, transparent 75%)',
+        }}
       >
-        {/* Logo & Title */}
+        {/* geometric pattern */}
+        <svg className="absolute inset-0 w-full h-full opacity-[0.07] pointer-events-none" aria-hidden>
+          <defs>
+            <pattern id="stars" width="56" height="56" patternUnits="userSpaceOnUse">
+              <rect x="14" y="14" width="28" height="28" fill="none" stroke="#a7f3d0" strokeWidth="1" />
+              <rect x="14" y="14" width="28" height="28" fill="none" stroke="#a7f3d0" strokeWidth="1" transform="rotate(45 28 28)" />
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#stars)" />
+        </svg>
+
         <motion.div
-          className="text-center mb-8"
-          initial={{ opacity: 0, y: -20 }}
+          initial={{ opacity: 0, scale: 0.85 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+          className="relative"
+        >
+          <BrandMark size={84} />
+        </motion.div>
+        <motion.h1
+          className="relative mt-5 text-4xl font-black text-gradient-gold"
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1, duration: 0.5 }}
+        >
+          وقار
+        </motion.h1>
+        <motion.p
+          className="relative mt-1 text-emerald-100/70 text-sm font-semibold"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
           transition={{ delay: 0.2, duration: 0.5 }}
         >
-          <motion.div
-            className="inline-flex items-center justify-center w-20 h-20 rounded-2xl mb-4 relative"
-            style={{
-              background: 'linear-gradient(135deg, rgba(5,150,105,0.3), rgba(4,120,87,0.2))',
-              border: '1px solid rgba(16,185,129,0.3)',
-              boxShadow: '0 0 40px rgba(16,185,129,0.2)',
-            }}
-            animate={{ y: [0, -8, 0] }}
-            transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-          >
-            <BookOpen className="w-10 h-10 text-emerald-400" />
-            <div className="absolute -top-1 -right-1 w-4 h-4 bg-gold-400 rounded-full animate-pulse-gold" />
-          </motion.div>
-          <h1 className="text-2xl font-bold text-gradient-emerald mb-1">
-            نظام إدارة تسميع القرآن
-          </h1>
-          <p className="text-emerald-300/60 text-sm">
-            بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ
-          </p>
-        </motion.div>
+          نظام إدارة تسميع القرآن الكريم
+        </motion.p>
+        <p className="relative mt-3 text-gold-300/70 text-base" style={{ fontFamily: 'var(--font-arabic)' }}>
+          بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ
+        </p>
+      </div>
 
-        {/* Login Card */}
-        <motion.div
-          className="glass-card p-8"
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.3, duration: 0.5 }}
-        >
-          {/* Mode Toggle */}
-          <div className="flex rounded-xl overflow-hidden border border-emerald-500/20 mb-6">
-            {(['teacher', 'admin'] as const).map((mode) => (
+      {/* Form card */}
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        className="relative -mt-8 flex-1 w-full max-w-md mx-auto px-4"
+        style={{ paddingBottom: 'max(1.5rem, var(--safe-area-inset-bottom, env(safe-area-inset-bottom)))' }}
+      >
+        <div className="glass-card p-5 sm:p-7">
+          {/* Mode toggle */}
+          <div className="relative grid grid-cols-2 p-1 rounded-2xl mb-6" style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid var(--line)' }}>
+            {modes.map(({ key, label, Icon }) => (
               <button
-                key={mode}
+                key={key}
+                type="button"
                 onClick={() => {
-                  setLoginMode(mode);
+                  setLoginMode(key);
                   setPassword('');
                   setSelectedTeacherId('');
                   setAdminUsername('');
                 }}
-                className={`flex-1 py-2.5 text-sm font-semibold transition-all duration-200 ${
-                  loginMode === mode
-                    ? 'bg-emerald-700/50 text-emerald-300'
-                    : 'text-emerald-300/50 hover:text-emerald-300/70 hover:bg-emerald-900/20'
-                }`}
+                className="relative z-10 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-colors"
+                style={{ color: loginMode === key ? '#ecfdf5' : 'rgba(167,243,208,0.5)' }}
               >
-                {mode === 'teacher' ? '👨‍🏫 معلم' : '🛡️ مشرف'}
+                {loginMode === key && (
+                  <motion.span
+                    layoutId="login-mode"
+                    className="absolute inset-0 rounded-xl -z-10"
+                    style={{ background: 'linear-gradient(160deg, #10a877, #046c4e)', boxShadow: '0 6px 16px -6px rgba(16,185,129,0.6)' }}
+                    transition={{ type: 'spring', stiffness: 500, damping: 36 }}
+                  />
+                )}
+                <Icon className="w-4 h-4" />
+                {label}
               </button>
             ))}
           </div>
 
           <form onSubmit={handleLogin} className="space-y-4">
             {loginMode === 'admin' ? (
-              /* Admin Username */
               <div>
-                <label className="block text-emerald-300/80 text-sm font-medium mb-1.5">
-                  اسم المستخدم
-                </label>
+                <label className="block text-emerald-200/75 text-sm font-semibold mb-1.5">اسم المستخدم</label>
                 <div className="relative">
-                  <User className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-500/60" />
+                  <User className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-400/55" />
                   <input
                     type="text"
                     value={adminUsername}
@@ -185,18 +183,16 @@ export default function LoginPage() {
                     className="input-glass pr-10"
                     required
                     autoComplete="username"
+                    autoCapitalize="none"
                   />
                 </div>
               </div>
             ) : (
-              /* Teacher Dropdown */
               <div>
-                <label className="block text-emerald-300/80 text-sm font-medium mb-1.5">
-                  اختر اسم المعلم
-                </label>
+                <label className="block text-emerald-200/75 text-sm font-semibold mb-1.5">اختر اسم المعلم</label>
                 <div className="relative">
-                  <User className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-500/60 pointer-events-none z-10" />
-                  <ChevronDown className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-500/60 pointer-events-none z-10" />
+                  <User className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-400/55 pointer-events-none z-10" />
+                  <ChevronDown className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-400/55 pointer-events-none z-10" />
                   <select
                     value={selectedTeacherId}
                     onChange={(e) => setSelectedTeacherId(e.target.value)}
@@ -214,66 +210,44 @@ export default function LoginPage() {
               </div>
             )}
 
-            {/* Password */}
             <div>
-              <label className="block text-emerald-300/80 text-sm font-medium mb-1.5">
-                كلمة المرور
-              </label>
+              <label className="block text-emerald-200/75 text-sm font-semibold mb-1.5">كلمة المرور</label>
               <div className="relative">
-                <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-500/60" />
+                <Lock className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-400/55" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="كلمة المرور"
-                  className="input-glass pr-10 pl-10"
+                  className="input-glass pr-10 pl-12"
                   required
                   autoComplete="current-password"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-500/60 hover:text-emerald-400 transition-colors"
+                  className="absolute left-1.5 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center text-emerald-400/60"
+                  aria-label={showPassword ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور'}
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
               {loginMode === 'teacher' && selectedTeacherId && (
-                <p className="text-xs text-emerald-500/50 mt-1 text-right">
-                  كلمة المرور: الاسم الأول + 123
-                </p>
+                <p className="text-xs text-emerald-400/50 mt-1.5">كلمة المرور: الاسم الأول + 123</p>
               )}
             </div>
 
-            {/* Login Button */}
-            <motion.button
-              type="submit"
-              disabled={loading}
-              className="btn-emerald w-full justify-center py-3 text-base mt-2"
-              whileHover={{ scale: 1.01 }}
-              whileTap={{ scale: 0.99 }}
-            >
+            <button type="submit" disabled={loading} className="btn-emerald w-full justify-center !min-h-[52px] text-base !mt-6">
               {loading ? (
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               ) : (
-                <>
-                  <Lock className="w-4 h-4" />
-                  دخول
-                </>
+                'دخول'
               )}
-            </motion.button>
+            </button>
           </form>
-        </motion.div>
+        </div>
 
-        {/* Version */}
-        <motion.p
-          className="text-center text-emerald-500/30 text-xs mt-6"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.8 }}
-        >
-          نظام إدارة تسميع القرآن الكريم © 2025
-        </motion.p>
+        <p className="text-center text-emerald-500/35 text-xs mt-6">وقار © {new Date().getFullYear()}</p>
       </motion.div>
     </div>
   );

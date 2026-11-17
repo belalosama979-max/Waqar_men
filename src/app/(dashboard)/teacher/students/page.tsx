@@ -124,7 +124,7 @@ export default function TeacherStudentsPage() {
             <GraduationCap className="w-5 h-5 text-emerald-400" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-emerald-100">طلابي</h2>
+            <h2 className="hidden md:block text-lg font-bold text-emerald-100">طلابي</h2>
             <p className="text-xs text-emerald-500/50">{students.length} طالب</p>
           </div>
         </div>
@@ -170,7 +170,7 @@ export default function TeacherStudentsPage() {
               student={student}
               index={idx}
               onRecitationSaved={load}
-              onClick={() => router.push(`/teacher/students/${student.id}`)}
+              onClick={() => router.push(`/teacher/students/profile?id=${student.id}`)}
               onEdit={() => openEdit(student)}
               onDelete={() => setDeleteTarget(student)}
             />
@@ -183,13 +183,13 @@ export default function TeacherStudentsPage() {
         {formOpen && (
           <>
             <motion.div
-              className="fixed inset-0 bg-black/60 z-50 backdrop-blur-sm"
+              className="fixed inset-0 bg-black/60 z-50"
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               onClick={() => setFormOpen(false)}
             />
-            <motion.div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+            <motion.div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 pointer-events-none">
               <motion.div
-                className="w-full sm:max-w-md glass-card p-6 rounded-t-3xl sm:rounded-2xl"
+                className="sheet sheet-handle pointer-events-auto w-full sm:max-w-md glass-card p-6"
                 initial={{ y: 60, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
                 exit={{ y: 60, opacity: 0 }}
                 transition={{ type: 'spring', damping: 28, stiffness: 300 }}

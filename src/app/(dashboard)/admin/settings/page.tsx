@@ -61,7 +61,7 @@ export default function AdminSettingsPage() {
           <div className="p-2.5 rounded-xl" style={{ background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.2)' }}>
             <Settings className="w-5 h-5 text-emerald-400" />
           </div>
-          <h2 className="text-lg font-bold text-emerald-100">الإعدادات</h2>
+          <h2 className="hidden md:block text-lg font-bold text-emerald-100">الإعدادات</h2>
         </div>
         <motion.button className="btn-emerald" onClick={handleSave} disabled={saving} whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
           {saving ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <><Save className="w-4 h-4" /> حفظ الإعدادات</>}

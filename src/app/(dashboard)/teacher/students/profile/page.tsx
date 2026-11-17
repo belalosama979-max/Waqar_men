@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useState, useEffect, useCallback, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { ArrowRight, Star, Calendar, BookOpen, Mic, BarChart3, Trash2 } from 'lucide-react';
+import { Star, Calendar, BookOpen, Mic, BarChart3, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   LineChart,
@@ -19,12 +19,21 @@ import { RecitationDialog } from '@/components/shared/RecitationDialog';
 import { formatArabicDate, getEvaluationLabel, getEvaluationBadgeColor } from '@/lib/utils';
 import { DEFAULT_EVALUATIONS } from '@/lib/constants';
 import { TableSkeleton } from '@/components/shared/Skeleton';
+import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 import type { Student, Recitation } from '@/types';
 
 export default function StudentProfilePage() {
-  const params = useParams();
-  const router = useRouter();
-  const studentId = Number(params.id);
+  // useSearchParams needs a Suspense boundary in a statically exported app
+  return (
+    <Suspense fallback={<div className="p-4"><TableSkeleton rows={5} /></div>}>
+      <StudentProfile />
+    </Suspense>
+  );
+}
+
+function StudentProfile() {
+  const searchParams = useSearchParams();
+  const studentId = Number(searchParams.get('id'));
 
   const [student, setStudent] = useState<Student | null>(null);
   const [recitations, setRecitations] = useState<Recitation[]>([]);
@@ -53,9 +62,10 @@ export default function StudentProfilePage() {
 
   useEffect(() => { load(); }, [load]);
 
+  const [undoTarget, setUndoTarget] = useState<Recitation | null>(null);
+
   const handleDeleteRecitation = async (rec: Recitation) => {
-    if (!confirm('هل أنت متأكد من التراجع عن هذا التسميع وخصم النقاط الخاصة به؟')) return;
-    
+    setUndoTarget(null);
     setDeletingId(rec.id!);
     try {
       await recitationsRepository.delete(rec.id!);
@@ -85,19 +95,10 @@ export default function StudentProfilePage() {
   }
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
-      {/* Back Button */}
-      <button
-        onClick={() => router.back()}
-        className="flex items-center gap-2 text-emerald-400/60 hover:text-emerald-400 transition-colors text-sm"
-      >
-        <ArrowRight className="w-4 h-4" />
-        رجوع
-      </button>
-
+    <div className="space-y-5 max-w-4xl mx-auto">
       {/* Profile Header */}
       <motion.div
-        className="glass-card-gold p-6"
+        className="glass-card-gold p-5 sm:p-6"
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
       >
@@ -107,61 +108,59 @@ export default function StudentProfilePage() {
             <div className="h-6 w-48 bg-emerald-900/50 rounded" />
           </div>
         ) : (
-          <div className="flex items-start gap-5">
-            <div
-              className="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl font-bold flex-shrink-0"
-              style={{
-                background: 'linear-gradient(135deg, rgba(217,119,6,0.3), rgba(180,83,9,0.2))',
-                border: '1px solid rgba(251,191,36,0.3)',
-              }}
-            >
-              {student?.name.charAt(0)}
-            </div>
-            <div className="flex-1">
-              <h1 className="text-2xl font-bold text-emerald-100 mb-1">{student?.name}</h1>
-              <p className="text-sm text-emerald-400/60 mb-3">{student?.teacherName}</p>
-              <div className="flex flex-wrap gap-3">
-                <div className="flex items-center gap-1.5">
-                  <Star className="w-4 h-4 text-gold-400" />
-                  <span className="text-gold-300 font-bold">
-                    {student?.totalPoints.toLocaleString('ar-SA')} نقطة
-                  </span>
-                </div>
-                {student?.lastDate && (
-                  <div className="flex items-center gap-1.5">
-                    <Calendar className="w-4 h-4 text-emerald-400" />
-                    <span className="text-emerald-300 text-sm">
-                      آخر تسميع: {formatArabicDate(student.lastDate)}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+            <div className="flex items-center gap-4 flex-1 min-w-0">
+              <div
+                className="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl font-black flex-shrink-0 text-gold-200"
+                style={{
+                  background: 'linear-gradient(145deg, rgba(217,180,90,0.32), rgba(150,100,20,0.12))',
+                  border: '1px solid rgba(217,180,90,0.4)',
+                }}
+              >
+                {student?.name.charAt(0)}
+              </div>
+              <div className="flex-1 min-w-0">
+                <h1 className="text-xl sm:text-2xl font-extrabold text-emerald-50 truncate">{student?.name}</h1>
+                <p className="text-sm text-emerald-300/55 truncate">
+                  {student?.teacherName}
+                  {student?.course ? ` • ${student.course}` : ''}
+                </p>
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2">
+                  <span className="flex items-center gap-1.5">
+                    <Star className="w-4 h-4 text-gold-400" />
+                    <span className="text-gradient-gold font-extrabold">
+                      {student?.totalPoints.toLocaleString('ar-SA')} نقطة
                     </span>
-                  </div>
-                )}
+                  </span>
+                  {student?.lastDate && (
+                    <span className="flex items-center gap-1.5 text-emerald-300/70 text-xs">
+                      <Calendar className="w-3.5 h-3.5 text-emerald-400" />
+                      {formatArabicDate(student.lastDate)}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
-            <motion.button
-              className="btn-emerald flex-shrink-0"
-              onClick={() => setDialogOpen(true)}
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-            >
+            <button className="btn-emerald justify-center w-full sm:w-auto flex-shrink-0" onClick={() => setDialogOpen(true)}>
               <Mic className="w-4 h-4" />
               تسجيل تسميع
-            </motion.button>
+            </button>
           </div>
         )}
       </motion.div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+      <div className="grid grid-cols-3 lg:grid-cols-6 gap-2.5">
         {DEFAULT_EVALUATIONS.map((ev, i) => (
           <motion.div
             key={ev.key}
-            className="glass-card p-3 text-center"
+            className="glass-card px-2 py-3 text-center"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.05 }}
           >
-            <p className="text-2xl font-bold text-emerald-300">{evalStats[ev.key] || 0}</p>
-            <p className="text-xs text-emerald-500/50 mt-1 leading-tight">{ev.label}</p>
+            <p className="text-2xl font-extrabold text-emerald-100 tabular-nums">{evalStats[ev.key] || 0}</p>
+            <p className="text-[11px] text-emerald-300/55 mt-1 leading-tight">{ev.label}</p>
           </motion.div>
         ))}
       </div>
@@ -240,10 +239,12 @@ export default function StudentProfilePage() {
                       {getEvaluationLabel(rec.evaluation)}
                     </span>
                     <button
-                      onClick={() => handleDeleteRecitation(rec)}
+                      onClick={() => setUndoTarget(rec)}
                       disabled={deletingId === rec.id}
-                      className="p-1.5 rounded-lg text-red-400/50 hover:text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-50"
+                      className="w-9 h-9 rounded-xl flex items-center justify-center text-red-300/70 active:scale-90 transition-transform disabled:opacity-50"
+                      style={{ background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.14)' }}
                       title="تراجع عن التسميع"
+                      aria-label="تراجع عن التسميع"
                     >
                       {deletingId === rec.id ? (
                         <div className="w-4 h-4 border-2 border-red-500/30 border-t-red-500 rounded-full animate-spin" />
@@ -267,6 +268,15 @@ export default function StudentProfilePage() {
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        open={!!undoTarget}
+        title="التراجع عن التسميع"
+        message="هل أنت متأكد من التراجع عن هذا التسميع وخصم النقاط الخاصة به؟"
+        confirmText="تراجع"
+        onConfirm={() => undoTarget && handleDeleteRecitation(undoTarget)}
+        onCancel={() => setUndoTarget(null)}
+      />
 
       {student && (
         <RecitationDialog

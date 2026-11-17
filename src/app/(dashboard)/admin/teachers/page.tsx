@@ -110,7 +110,7 @@ export default function AdminTeachersPage() {
             <Users className="w-5 h-5 text-emerald-400" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-emerald-100">إدارة المعلمين</h2>
+            <h2 className="hidden md:block text-lg font-bold text-emerald-100">إدارة المعلمين</h2>
             <p className="text-xs text-emerald-500/50">{teachers.length} معلم</p>
           </div>
         </div>
@@ -270,13 +270,13 @@ export default function AdminTeachersPage() {
       <AnimatePresence>
         {formOpen && (
           <>
-            <motion.div className="fixed inset-0 bg-black/60 z-50 backdrop-blur-sm" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setFormOpen(false)} />
-            <motion.div className="fixed inset-0 z-50 flex items-center justify-center p-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <motion.div className="fixed inset-0 bg-black/60 z-50" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setFormOpen(false)} />
+            <motion.div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 pointer-events-none" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
               <motion.div
-                className="w-full max-w-md glass-card p-6"
-                initial={{ scale: 0.9, y: 20 }}
-                animate={{ scale: 1, y: 0 }}
-                exit={{ scale: 0.9, y: 20 }}
+                className="sheet sheet-handle pointer-events-auto w-full sm:max-w-md glass-card p-6"
+                initial={{ y: 60, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: 60, opacity: 0 }}
                 transition={{ type: 'spring', damping: 25, stiffness: 300 }}
                 onClick={(e) => e.stopPropagation()}
               >

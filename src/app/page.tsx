@@ -6,9 +6,19 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '@/store/authStore';
 import { BookOpen, Star, Shield, Smartphone, Download, ArrowLeft, X } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { Capacitor } from '@capacitor/core';
 
 export default function HomePage() {
   const { isAuthenticated, user } = useAuthStore();
+  const router = useRouter();
+
+  // Inside the installed Android app the marketing page is skipped: go straight in.
+  useEffect(() => {
+    if (Capacitor.isNativePlatform()) {
+      router.replace(isAuthenticated && user ? (user.role === 'admin' ? '/admin' : '/teacher') : '/login');
+    }
+  }, [isAuthenticated, user, router]);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showInstallModal, setShowInstallModal] = useState(false);

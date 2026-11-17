@@ -40,3 +40,9 @@ public/worker-*.js
 public/sw.js.map
 public/workbox-*.js.map
 public/worker-*.js.map
+
+# Android release signing (back these up privately, never commit)
+*.jks
+android/key.properties
+release/
+android_build.log

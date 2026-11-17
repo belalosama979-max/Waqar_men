@@ -1,8 +1,10 @@
 'use client';
 
-import { usePathname } from 'next/navigation';
-import { motion } from 'framer-motion';
+import { usePathname, useRouter } from 'next/navigation';
+import { ArrowRight, LogOut } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
+import { BrandMark } from './BrandMark';
+import { useLogout } from './useLogout';
 
 const pageTitles: Record<string, string> = {
   '/admin': 'لوحة القيادة',
@@ -16,65 +18,71 @@ const pageTitles: Record<string, string> = {
 };
 
 function getPageTitle(pathname: string): string {
-  if (pageTitles[pathname]) return pageTitles[pathname];
-  if (pathname.startsWith('/teacher/students/')) return 'ملف الطالب';
-  if (pathname.startsWith('/admin/students/')) return 'ملف الطالب';
-  return 'نظام تسميع القرآن';
+  const path = pathname.replace(/\/$/, '');
+  if (pageTitles[path]) return pageTitles[path];
+  if (path.includes('/students/')) return 'ملف الطالب';
+  return 'وقار';
 }
 
 export function Header() {
   const pathname = usePathname();
+  const router = useRouter();
   const { user } = useAuthStore();
-  const title = getPageTitle(pathname);
-  const now = new Date();
-  const greeting =
-    now.getHours() < 12 ? 'صباح الخير' : now.getHours() < 17 ? 'مساء الخير' : 'مساء النور';
+  const logout = useLogout();
+  const path = pathname.replace(/\/$/, '');
+  const title = getPageTitle(path);
+  const isRoot = path === '/admin' || path === '/teacher';
+  const isSubPage = !pageTitles[path];
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'صباح الخير' : 'مساء الخير';
 
   return (
-    <motion.header
-      className="sticky top-0 z-30 flex items-center justify-between"
+    <header
+      className="sticky top-0 z-30 flex items-center gap-3"
       style={{
-        background: 'rgba(8, 13, 8, 0.85)',
-        backdropFilter: 'blur(20px)',
-        borderBottom: '1px solid rgba(16,185,129,0.1)',
-        // Safe area padding
-        paddingTop: 'max(0.75rem, env(safe-area-inset-top))',
+        background: 'linear-gradient(180deg, rgba(5,10,7,0.97) 0%, rgba(5,10,7,0.88) 100%)',
+        borderBottom: '1px solid var(--line)',
+        paddingTop: 'max(0.75rem, var(--safe-area-inset-top, env(safe-area-inset-top)))',
         paddingBottom: '0.75rem',
-        paddingRight: '1rem',
-        paddingLeft: '1rem',
+        paddingInline: '1rem',
       }}
-      initial={{ opacity: 0, y: -10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
     >
-      {/* Left side: title — offset on mobile to not overlap hamburger */}
-      <div className="flex items-center gap-3 mr-12 md:mr-0">
-        <div>
-          <h1 className="text-base md:text-lg font-bold text-emerald-100 leading-tight">{title}</h1>
-          <p className="text-[11px] text-emerald-500/50 hidden md:block">
-            {greeting}، {user?.name}
-          </p>
-        </div>
+      {isSubPage ? (
+        <button
+          onClick={() => router.back()}
+          className="w-10 h-10 rounded-xl flex items-center justify-center text-emerald-300 active:scale-95 transition-transform"
+          style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid var(--line-strong)' }}
+          aria-label="رجوع"
+        >
+          <ArrowRight className="w-5 h-5" />
+        </button>
+      ) : (
+        <BrandMark size={40} className="md:hidden" />
+      )}
+
+      <div className="flex-1 min-w-0">
+        {isRoot ? (
+          <>
+            <p className="text-[11px] text-emerald-400/55 leading-tight">{greeting}،</p>
+            <h1 className="text-lg font-extrabold text-emerald-50 leading-tight truncate">{user?.name}</h1>
+          </>
+        ) : (
+          <h1 className="text-lg font-extrabold text-emerald-50 leading-tight truncate">{title}</h1>
+        )}
       </div>
 
-      {/* Right side: greeting on mobile + Date on desktop */}
-      <div className="flex items-center gap-2 md:gap-3">
-        {/* Mobile greeting */}
-        <p className="text-xs text-emerald-400/60 md:hidden">
-          {greeting}، <span className="text-emerald-300/80 font-medium">{user?.name?.split(' ')[0]}</span>
-        </p>
+      <p className="hidden sm:block text-xs text-emerald-300/55 font-medium">
+        {new Date().toLocaleDateString('ar-SA', { weekday: 'long', day: 'numeric', month: 'long' })}
+      </p>
 
-        {/* Desktop date */}
-        <div className="hidden sm:block text-left">
-          <p className="text-xs text-emerald-300/60 font-medium">
-            {now.toLocaleDateString('ar-SA', {
-              weekday: 'long',
-              day: 'numeric',
-              month: 'long',
-            })}
-          </p>
-        </div>
-      </div>
-    </motion.header>
+      <button
+        onClick={logout}
+        className="md:hidden w-10 h-10 rounded-xl flex items-center justify-center text-red-300/70 active:scale-95 transition-transform"
+        style={{ background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.15)' }}
+        aria-label="تسجيل الخروج"
+      >
+        <LogOut className="w-[18px] h-[18px]" />
+      </button>
+    </header>
   );
 }

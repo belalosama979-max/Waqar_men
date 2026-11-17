@@ -121,7 +121,7 @@ export default function AdminStudentsPage() {
             <GraduationCap className="w-5 h-5 text-emerald-400" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-emerald-100">إدارة الطلاب</h2>
+            <h2 className="hidden md:block text-lg font-bold text-emerald-100">إدارة الطلاب</h2>
             <p className="text-xs text-emerald-500/50">{students.length} طالب</p>
           </div>
         </div>
@@ -155,7 +155,48 @@ export default function AdminStudentsPage() {
             <p className="text-emerald-400/50">{search ? 'لا توجد نتائج' : 'لا يوجد طلاب'}</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <>
+          {/* Phone: card rows */}
+          <div className="md:hidden divide-y divide-emerald-500/5">
+            {filtered.map((student, idx) => (
+              <motion.div
+                key={student.id}
+                className="p-3.5 flex items-center gap-3"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: Math.min(idx, 10) * 0.02 }}
+              >
+                <div
+                  className="w-11 h-11 rounded-2xl flex items-center justify-center font-extrabold flex-shrink-0 text-emerald-100"
+                  style={{ background: 'linear-gradient(145deg, rgba(16,185,129,0.28), rgba(4,120,87,0.1))', border: '1px solid rgba(52,211,153,0.2)' }}
+                >
+                  {student.name.charAt(0)}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-[15px] text-emerald-50 truncate">{student.name}</p>
+                  <p className="text-xs text-emerald-400/50 truncate">
+                    {student.teacherName || '—'} • {student.course || 'المساق الحر'}
+                  </p>
+                  <p className="text-xs mt-0.5">
+                    <span className="font-bold text-gold-400">{student.totalPoints.toLocaleString('ar-SA')}</span>
+                    <span className="text-emerald-400/45"> نقطة • {student.lastDate ? formatShortDate(student.lastDate) : 'لا تسميع'}</span>
+                  </p>
+                </div>
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  <button onClick={() => openEdit(student)} className="w-9 h-9 rounded-xl flex items-center justify-center text-emerald-300/70 active:scale-90 transition-transform" style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid var(--line)' }} aria-label="تعديل">
+                    <Pencil className="w-4 h-4" />
+                  </button>
+                  <button onClick={() => { setTransferStudent(student); setNewTeacherId(''); }} className="w-9 h-9 rounded-xl flex items-center justify-center text-sky-300/70 active:scale-90 transition-transform" style={{ background: 'rgba(96,165,250,0.08)', border: '1px solid rgba(96,165,250,0.14)' }} aria-label="نقل">
+                    <ArrowLeftRight className="w-4 h-4" />
+                  </button>
+                  <button onClick={() => setDeleteTarget(student)} className="w-9 h-9 rounded-xl flex items-center justify-center text-red-300/70 active:scale-90 transition-transform" style={{ background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.14)' }} aria-label="حذف">
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr style={{ borderBottom: '1px solid rgba(16,185,129,0.1)' }}>
@@ -207,6 +248,7 @@ export default function AdminStudentsPage() {
               </tbody>
             </table>
           </div>
+          </>
         )}
       </div>
 
@@ -214,9 +256,9 @@ export default function AdminStudentsPage() {
       <AnimatePresence>
         {formOpen && (
           <>
-            <motion.div className="fixed inset-0 bg-black/60 z-50 backdrop-blur-sm" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setFormOpen(false)} />
-            <motion.div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-              <motion.div className="w-full max-w-md glass-card p-6" initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }} transition={{ type: 'spring', damping: 25, stiffness: 300 }} onClick={(e) => e.stopPropagation()}>
+            <motion.div className="fixed inset-0 bg-black/60 z-50" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setFormOpen(false)} />
+            <motion.div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 pointer-events-none">
+              <motion.div className="sheet sheet-handle pointer-events-auto w-full sm:max-w-md glass-card p-6" initial={{ y: 60, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 60, opacity: 0 }} transition={{ type: 'spring', damping: 25, stiffness: 300 }} onClick={(e) => e.stopPropagation()}>
                 <div className="flex items-center justify-between mb-5">
                   <h3 className="text-lg font-bold text-emerald-100">{editingStudent ? 'تعديل الطالب' : 'إضافة طالب جديد'}</h3>
                   <button onClick={() => setFormOpen(false)} className="text-emerald-400/40 hover:text-emerald-400 transition-colors"><X className="w-5 h-5" /></button>
@@ -260,9 +302,9 @@ export default function AdminStudentsPage() {
       <AnimatePresence>
         {transferStudent && (
           <>
-            <motion.div className="fixed inset-0 bg-black/60 z-50 backdrop-blur-sm" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setTransferStudent(null)} />
-            <motion.div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-              <motion.div className="w-full max-w-md glass-card p-6" initial={{ scale: 0.9 }} animate={{ scale: 1 }} exit={{ scale: 0.9 }} onClick={(e) => e.stopPropagation()}>
+            <motion.div className="fixed inset-0 bg-black/60 z-50" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setTransferStudent(null)} />
+            <motion.div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 pointer-events-none">
+              <motion.div className="sheet sheet-handle pointer-events-auto w-full sm:max-w-md glass-card p-6" initial={{ y: 60, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 60, opacity: 0 }} transition={{ type: "spring", damping: 30, stiffness: 340 }} onClick={(e) => e.stopPropagation()}>
                 <div className="flex items-center justify-between mb-5">
                   <h3 className="text-lg font-bold text-emerald-100">نقل الطالب</h3>
                   <button onClick={() => setTransferStudent(null)} className="text-emerald-400/40 hover:text-emerald-400"><X className="w-5 h-5" /></button>

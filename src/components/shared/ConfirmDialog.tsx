@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { AlertTriangle, Trash2, X } from 'lucide-react';
+import { AlertTriangle, Trash2 } from 'lucide-react';
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -24,91 +24,59 @@ export function ConfirmDialog({
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
+  const danger = variant === 'danger';
   return (
     <AnimatePresence>
       {open && (
         <>
           <motion.div
-            className="fixed inset-0 bg-black/60 z-50 backdrop-blur-sm"
+            className="fixed inset-0 bg-black/65 z-50"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onCancel}
           />
-          <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center p-4"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 pointer-events-none">
             <motion.div
-              className="w-full max-w-md glass-card p-6"
-              initial={{ scale: 0.9, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.9, y: 20 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="sheet sheet-handle pointer-events-auto w-full sm:max-w-md glass-card p-6 text-center"
+              initial={{ y: 60, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 60, opacity: 0 }}
+              transition={{ type: 'spring', damping: 30, stiffness: 340 }}
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Header */}
-              <div className="flex items-start gap-4 mb-4">
-                <div
-                  className={`p-3 rounded-xl flex-shrink-0 ${
-                    variant === 'danger'
-                      ? 'bg-red-500/20 text-red-400'
-                      : 'bg-amber-500/20 text-amber-400'
-                  }`}
-                >
-                  {variant === 'danger' ? (
-                    <Trash2 className="w-6 h-6" />
-                  ) : (
-                    <AlertTriangle className="w-6 h-6" />
-                  )}
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-bold text-emerald-100 mb-1">{title}</h3>
-                  <p className="text-sm text-emerald-300/60">{message}</p>
-                </div>
-                <button
-                  onClick={onCancel}
-                  className="text-emerald-400/40 hover:text-emerald-400 transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
+              <div
+                className={`mx-auto w-14 h-14 rounded-2xl flex items-center justify-center mb-4 ${
+                  danger ? 'bg-red-500/15 text-red-300' : 'bg-amber-500/15 text-amber-300'
+                }`}
+                style={{ border: `1px solid ${danger ? 'rgba(239,68,68,0.25)' : 'rgba(245,158,11,0.25)'}` }}
+              >
+                {danger ? <Trash2 className="w-6 h-6" /> : <AlertTriangle className="w-6 h-6" />}
               </div>
+              <h3 className="text-lg font-extrabold text-emerald-50 mb-1.5">{title}</h3>
+              <p className="text-sm text-emerald-200/60 leading-relaxed mb-6">{message}</p>
 
-              {/* Actions */}
-              <div className="flex gap-3 justify-end">
+              <div className="flex gap-3">
                 <button
                   onClick={onCancel}
-                  className="px-4 py-2 rounded-lg text-sm font-medium text-emerald-300/70 hover:text-emerald-300 transition-colors"
-                  style={{
-                    background: 'rgba(16,185,129,0.08)',
-                    border: '1px solid rgba(16,185,129,0.15)',
-                  }}
+                  className="flex-1 min-h-[48px] rounded-2xl text-sm font-semibold text-emerald-200/80 active:scale-[0.97] transition-transform"
+                  style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid var(--line-strong)' }}
                 >
                   {cancelText}
                 </button>
-                <motion.button
+                <button
                   onClick={onConfirm}
-                  className="px-4 py-2 rounded-lg text-sm font-semibold text-white transition-all"
+                  className="flex-1 min-h-[48px] rounded-2xl text-sm font-bold text-white active:scale-[0.97] transition-transform"
                   style={{
-                    background:
-                      variant === 'danger'
-                        ? 'linear-gradient(135deg, #dc2626, #991b1b)'
-                        : 'linear-gradient(135deg, #d97706, #92400e)',
-                    border:
-                      variant === 'danger'
-                        ? '1px solid rgba(239,68,68,0.3)'
-                        : '1px solid rgba(251,191,36,0.3)',
+                    background: danger ? 'linear-gradient(160deg, #ef4444, #b91c1c)' : 'linear-gradient(160deg, #f59e0b, #b45309)',
+                    border: danger ? '1px solid rgba(248,113,113,0.4)' : '1px solid rgba(251,191,36,0.4)',
                   }}
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.97 }}
                 >
                   {confirmText}
-                </motion.button>
+                </button>
               </div>
             </motion.div>
-          </motion.div>
+          </div>
         </>
       )}
     </AnimatePresence>

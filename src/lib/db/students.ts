@@ -42,7 +42,7 @@ export const studentsRepository = {
         .from('students')
         .select('*')
         .eq('id', id)
-        .single();
+        .maybeSingle();
       if (error || !data) return undefined;
       return mapStudent(data);
     } catch {
@@ -170,7 +170,7 @@ export const studentsRepository = {
       .from('students')
       .select('total_points, total_pages, total_hadiths')
       .eq('id', studentId)
-      .single();
+      .maybeSingle();
     const newTotalPoints = ((current?.total_points as number) ?? 0) + points;
     const newTotalPages = ((current?.total_pages as number) ?? 0) + pages;
     const newTotalHadiths = ((current?.total_hadiths as number) ?? 0) + hadiths;
@@ -199,7 +199,7 @@ export const studentsRepository = {
       .order('date', { ascending: false })
       .order('created_at', { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
     
     const patch: Record<string, unknown> = {
       last_recitation: latest ? latest.surah_name : null,

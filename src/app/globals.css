@@ -264,17 +264,12 @@
   }
 
   /* Phone bottom tab bar */
+  /* solid, no blur: blurring live content under the bar costs frames on Android */
   .tabbar {
-    background: rgba(8, 14, 10, 0.96);
+    background: linear-gradient(180deg, #0a120d 0%, #070d09 100%);
     border-top: 1px solid var(--line);
+    box-shadow: 0 -10px 24px -12px rgba(0, 0, 0, 0.7);
     padding-bottom: var(--safe-area-inset-bottom, env(safe-area-inset-bottom));
-  }
-  @supports (backdrop-filter: blur(1px)) {
-    .tabbar {
-      background: rgba(8, 14, 10, 0.84);
-      backdrop-filter: saturate(160%) blur(16px);
-      -webkit-backdrop-filter: saturate(160%) blur(16px);
-    }
   }
 }
 

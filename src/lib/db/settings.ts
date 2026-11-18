@@ -3,7 +3,7 @@ import { supabase } from '@/lib/supabase';
 export const settingsRepository = {
   async get(key: string): Promise<string | undefined> {
     try {
-      const { data, error } = await supabase.from('settings').select('value').eq('key', key).single();
+      const { data, error } = await supabase.from('settings').select('value').eq('key', key).maybeSingle();
       if (error || !data) return undefined;
       return data.value;
     } catch {

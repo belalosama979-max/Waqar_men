@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { useAuthStore } from '@/store/authStore';
@@ -16,8 +16,13 @@ export default function DashboardLayout({
   const router = useRouter();
   const pathname = usePathname();
   const mainRef = useRef<HTMLElement>(null);
+  // The first render matches the prerendered HTML, where nobody is logged in yet.
+  // Deciding before the saved session is visible bounced every reload / deep link to /login.
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => setHydrated(true), []);
 
   useEffect(() => {
+    if (!hydrated) return;
     if (!isAuthenticated) {
       router.replace('/login');
       return;
@@ -29,14 +34,14 @@ export default function DashboardLayout({
     } else if (user?.role === 'admin' && pathname.startsWith('/teacher')) {
       router.replace('/admin');
     }
-  }, [isAuthenticated, user, pathname, router]);
+  }, [hydrated, isAuthenticated, user, pathname, router]);
 
   // each screen opens at its top, like a native app
   useEffect(() => {
     mainRef.current?.scrollTo({ top: 0 });
   }, [pathname]);
 
-  if (!isAuthenticated) {
+  if (!hydrated || !isAuthenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-emerald-500/30 border-t-emerald-400 rounded-full animate-spin" />

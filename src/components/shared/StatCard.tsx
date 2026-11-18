@@ -29,8 +29,11 @@ function AnimatedCounter({ value, duration = 0.9 }: { value: number; duration?: 
       if (progress < 1) animRef.current = requestAnimationFrame(animate);
     };
     animRef.current = requestAnimationFrame(animate);
+    // if frames are paused (app in background, battery saver) still land on the real number
+    const settle = setTimeout(() => setCount(value), duration * 1000 + 150);
     return () => {
       if (animRef.current) cancelAnimationFrame(animRef.current);
+      clearTimeout(settle);
     };
   }, [value, duration]);
 

@@ -29,13 +29,19 @@ type HadithInputMode = 'range' | 'manual';
 
 const MAX_HADITHS = 40; // Both Arba'een collections = 40 hadiths
 
+/** Today as YYYY-MM-DD in the phone's own timezone (toISOString is UTC and lags after midnight). */
+function todayLocal(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 export function RecitationDialog({ student, open, onClose, onSaved }: RecitationDialogProps) {
   const { user } = useAuthStore();
   const [step, setStep] = useState<Step>(1);
   const [loading, setSaving] = useState(false);
 
   // Step 1 — Date
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [date, setDate] = useState(todayLocal());
 
   // Step 2 — Quran type
   const [type, setType] = useState<RecitationType>('جزء');
@@ -91,7 +97,7 @@ export function RecitationDialog({ student, open, onClose, onSaved }: Recitation
   useEffect(() => {
     if (open) {
       setStep(1);
-      setDate(new Date().toISOString().split('T')[0]);
+      setDate(todayLocal());
       setType(isHadithCourse ? 'حديث' : 'جزء');
       setPart(1);
       setSurahIndex(1);
@@ -214,8 +220,6 @@ export function RecitationDialog({ student, open, onClose, onSaved }: Recitation
     }
   };
 
-  if (!open) return null;
-
   const stepTitles = ['اختر التاريخ', 'نوع التسميع', 'التقييم والنقاط'];
 
   // ── Quick select buttons for hadiths ──────────────────────
@@ -305,6 +309,7 @@ export function RecitationDialog({ student, open, onClose, onSaved }: Recitation
                       initial={{ opacity: 0, x: 20 }}
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: -20 }}
+                      transition={{ duration: 0.14 }}
                       className="space-y-4"
                     >
                       <div className="flex items-center gap-2 mb-3">
@@ -315,12 +320,12 @@ export function RecitationDialog({ student, open, onClose, onSaved }: Recitation
                         type="date"
                         value={date}
                         onChange={(e) => setDate(e.target.value)}
-                        max={new Date().toISOString().split('T')[0]}
+                        max={todayLocal()}
                         className="input-glass text-center text-lg"
                         style={{ colorScheme: 'dark' }}
                       />
                       <p className="text-xs text-emerald-500/50 text-center">
-                        {new Date(date).toLocaleDateString('ar-SA', {
+                        {new Date(`${date}T00:00:00`).toLocaleDateString('ar-SA', {
                           weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
                         })}
                       </p>
@@ -334,6 +339,7 @@ export function RecitationDialog({ student, open, onClose, onSaved }: Recitation
                       initial={{ opacity: 0, x: 20 }}
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: -20 }}
+                      transition={{ duration: 0.14 }}
                       className="space-y-4"
                     >
                       <div className="flex items-center gap-2 mb-3">
@@ -412,7 +418,7 @@ export function RecitationDialog({ student, open, onClose, onSaved }: Recitation
                                 <div>
                                   <label className="text-xs text-emerald-400/60 mb-1.5 block">من حديث رقم</label>
                                   <input
-                                    type="number"
+                                    type="number" inputMode="numeric"
                                     min={1}
                                     max={MAX_HADITHS}
                                     value={hadithFrom}
@@ -424,7 +430,7 @@ export function RecitationDialog({ student, open, onClose, onSaved }: Recitation
                                 <div>
                                   <label className="text-xs text-emerald-400/60 mb-1.5 block">إلى حديث رقم</label>
                                   <input
-                                    type="number"
+                                    type="number" inputMode="numeric"
                                     min={Number(hadithFrom) || 1}
                                     max={MAX_HADITHS}
                                     value={hadithTo}
@@ -462,11 +468,11 @@ export function RecitationDialog({ student, open, onClose, onSaved }: Recitation
                               <div>
                                 <label className="text-xs text-emerald-400/60 mb-1.5 block">عدد الأحاديث</label>
                                 <input
-                                  type="number"
+                                  type="number" inputMode="numeric"
                                   min={1}
                                   max={MAX_HADITHS}
                                   value={hadithManualCount}
-                                  onChange={(e) => setHadithManualCount(e.target.value === '' ? '' : Number(e.target.value))}
+                                  onChange={(e) => setHadithManualCount(e.target.value === '' ? '' : Math.max(0, Math.min(MAX_HADITHS, Number(e.target.value))))}
                                   className="input-glass text-center text-xl font-bold"
                                   placeholder="0"
                                   autoFocus
@@ -538,7 +544,7 @@ export function RecitationDialog({ student, open, onClose, onSaved }: Recitation
                                 <div className="flex-1">
                                   <label className="text-xs text-emerald-400/60 mb-1.5 block">من صفحة</label>
                                   <input
-                                    type="number" min={1} max={604} value={fromPage}
+                                    type="number" inputMode="numeric" min={1} max={604} value={fromPage}
                                     onChange={(e) => setFromPage(e.target.value === '' ? '' : Number(e.target.value))}
                                     className="input-glass" placeholder="1"
                                   />
@@ -546,7 +552,7 @@ export function RecitationDialog({ student, open, onClose, onSaved }: Recitation
                                 <div className="flex-1">
                                   <label className="text-xs text-emerald-400/60 mb-1.5 block">إلى صفحة</label>
                                   <input
-                                    type="number" min={1} max={604} value={toPage}
+                                    type="number" inputMode="numeric" min={1} max={604} value={toPage}
                                     onChange={(e) => setToPage(e.target.value === '' ? '' : Number(e.target.value))}
                                     className="input-glass" placeholder="20"
                                   />
@@ -578,7 +584,7 @@ export function RecitationDialog({ student, open, onClose, onSaved }: Recitation
                                 <div className="flex-1">
                                   <label className="text-xs text-emerald-400/60 mb-1.5 block">من آية</label>
                                   <input
-                                    type="number" min={1} value={fromAyah}
+                                    type="number" inputMode="numeric" min={1} value={fromAyah}
                                     onChange={(e) => setFromAyah(e.target.value === '' ? '' : Number(e.target.value))}
                                     className="input-glass" placeholder="1"
                                   />
@@ -586,7 +592,7 @@ export function RecitationDialog({ student, open, onClose, onSaved }: Recitation
                                 <div className="flex-1">
                                   <label className="text-xs text-emerald-400/60 mb-1.5 block">إلى آية</label>
                                   <input
-                                    type="number" min={1} value={toAyah}
+                                    type="number" inputMode="numeric" min={1} value={toAyah}
                                     onChange={(e) => setToAyah(e.target.value === '' ? '' : Number(e.target.value))}
                                     className="input-glass" placeholder="286"
                                   />
@@ -625,6 +631,7 @@ export function RecitationDialog({ student, open, onClose, onSaved }: Recitation
                       initial={{ opacity: 0, x: 20 }}
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: -20 }}
+                      transition={{ duration: 0.14 }}
                       className="space-y-4"
                     >
                       <div className="flex items-center gap-2 mb-3">
@@ -685,11 +692,11 @@ export function RecitationDialog({ student, open, onClose, onSaved }: Recitation
                           نقاط إضافية
                         </label>
                         <input
-                          type="number"
+                          type="number" inputMode="numeric"
                           min={0}
                           max={999}
                           value={extraPoints}
-                          onChange={(e) => setExtraPoints(Number(e.target.value))}
+                          onChange={(e) => setExtraPoints(Math.max(0, Math.min(999, Number(e.target.value) || 0)))}
                           className="input-glass text-center"
                           placeholder="0"
                         />

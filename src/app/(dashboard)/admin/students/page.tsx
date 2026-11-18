@@ -55,6 +55,7 @@ export default function AdminStudentsPage() {
   };
 
   const handleSave = async () => {
+    if (saving) return;
     if (!form.name.trim() || !form.teacherId) {
       toast.error('يرجى تعبئة جميع الحقول');
       return;
@@ -98,18 +99,26 @@ export default function AdminStudentsPage() {
   const handleTransfer = async () => {
     if (!transferStudent || !newTeacherId) return;
     const teacher = teachers.find((t) => String(t.id) === newTeacherId);
-    await studentsRepository.transferToTeacher(transferStudent.id!, Number(newTeacherId), teacher?.name || '');
-    toast.success(`تم نقل ${transferStudent.name} إلى ${teacher?.name}`);
-    setTransferStudent(null);
-    load();
+    try {
+      await studentsRepository.transferToTeacher(transferStudent.id!, Number(newTeacherId), teacher?.name || '');
+      toast.success(`تم نقل ${transferStudent.name} إلى ${teacher?.name}`);
+      setTransferStudent(null);
+      load();
+    } catch {
+      toast.error('حدث خطأ أثناء النقل');
+    }
   };
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
-    await studentsRepository.delete(deleteTarget.id!);
-    toast.success('تم حذف الطالب');
-    setDeleteTarget(null);
-    load();
+    try {
+      await studentsRepository.delete(deleteTarget.id!);
+      toast.success('تم حذف الطالب');
+      setDeleteTarget(null);
+      load();
+    } catch {
+      toast.error('حدث خطأ أثناء الحذف');
+    }
   };
 
   return (

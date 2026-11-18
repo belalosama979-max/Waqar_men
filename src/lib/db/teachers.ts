@@ -37,7 +37,7 @@ export const teachersRepository = {
         .from('teachers')
         .select('*')
         .eq('id', id)
-        .single();
+        .maybeSingle();
       if (error || !data) return undefined;
       return mapTeacher(data);
     } catch {
@@ -51,7 +51,7 @@ export const teachersRepository = {
         .from('teachers')
         .select('*')
         .eq('username', username)
-        .single();
+        .maybeSingle();
       if (error || !data) return undefined;
       return mapTeacher(data);
     } catch {
@@ -129,7 +129,7 @@ export const adminRepository = {
         .select('id')
         .eq('username', username)
         .eq('password', password)
-        .single();
+        .maybeSingle();
       if (error || !data) return false;
       return true;
     } catch {

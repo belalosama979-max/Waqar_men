@@ -63,6 +63,7 @@ export default function TeacherStudentsPage() {
   };
 
   const handleSave = async () => {
+    if (saving) return; // Enter + tap can fire twice
     if (!form.name.trim()) {
       toast.error('يرجى إدخال اسم الطالب');
       return;

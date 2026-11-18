@@ -28,10 +28,10 @@ export default function AdminTeachersPage() {
 
   const load = useCallback(async () => {
     const list = await teachersRepository.getAll();
+    // all counts in parallel (was one request after another)
+    const countList = await Promise.all(list.map((t) => studentsRepository.count(t.id!)));
     const counts: Record<number, number> = {};
-    for (const t of list) {
-      counts[t.id!] = await studentsRepository.count(t.id!);
-    }
+    list.forEach((t, i) => { counts[t.id!] = countList[i]; });
     setTeachers(list);
     setStudentCounts(counts);
     setLoading(false);
@@ -52,6 +52,7 @@ export default function AdminTeachersPage() {
   };
 
   const handleSave = async () => {
+    if (saving) return;
     if (!form.name.trim()) {
       toast.error('يرجى إدخال اسم المعلم');
       return;
@@ -89,17 +90,29 @@ export default function AdminTeachersPage() {
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
-    await teachersRepository.delete(deleteTarget.id!);
-    toast.success('تم حذف المعلم');
-    setDeleteTarget(null);
-    load();
+    try {
+      await teachersRepository.delete(deleteTarget.id!);
+      toast.success('تم حذف المعلم');
+      setDeleteTarget(null);
+      load();
+    } catch {
+      toast.error('حدث خطأ أثناء الحذف');
+    }
   };
 
+  const [resetTarget, setResetTarget] = useState<Teacher | null>(null);
+
   const handleResetPassword = async (teacher: Teacher) => {
+    setResetTarget(null);
     const newPassword = generateTeacherPassword(teacher.name);
-    await teachersRepository.update(teacher.id!, { password: newPassword });
-    toast.success(`تم إعادة تعيين كلمة المرور: ${newPassword}`);
+    try {
+      await teachersRepository.update(teacher.id!, { password: newPassword });
+      toast.success(`تم إعادة تعيين كلمة المرور: ${newPassword}`, { duration: 10000 });
+    } catch {
+      toast.error('تعذّر إعادة تعيين كلمة المرور');
+    }
   };
+
 
   return (
     <div className="space-y-6">
@@ -158,26 +171,32 @@ export default function AdminTeachersPage() {
                     <div className="flex items-center gap-1.5">
                       <button
                         onClick={() => openEdit(teacher)}
-                        className="p-2 rounded-lg text-emerald-400/50 hover:text-emerald-400 hover:bg-emerald-500/10 transition-all"
+                        aria-label={`تعديل ${teacher.name}`}
+                        className="w-9 h-9 rounded-xl flex items-center justify-center text-emerald-300/70 active:scale-90 transition-transform"
+                        style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid var(--line)' }}
                       >
                         <Pencil className="w-4 h-4" />
                       </button>
                       <button
-                        onClick={() => handleResetPassword(teacher)}
-                        className="p-2 rounded-lg text-gold-400/50 hover:text-gold-400 hover:bg-gold-500/10 transition-all"
+                        onClick={() => setResetTarget(teacher)}
+                        aria-label={`إعادة تعيين كلمة مرور ${teacher.name}`}
+                        className="w-9 h-9 rounded-xl flex items-center justify-center text-gold-300/80 active:scale-90 transition-transform"
+                        style={{ background: 'rgba(217,180,90,0.08)', border: '1px solid rgba(217,180,90,0.16)' }}
                       >
                         <Key className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => setDeleteTarget(teacher)}
-                        className="p-2 rounded-lg text-red-400/50 hover:text-red-400 hover:bg-red-500/10 transition-all"
+                        aria-label={`حذف ${teacher.name}`}
+                        className="w-9 h-9 rounded-xl flex items-center justify-center text-red-300/70 active:scale-90 transition-transform"
+                        style={{ background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.14)' }}
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 pr-13">
-                    <span className={`badge ${teacher.course === 'الأربعين البخارية' ? 'bg-amber-500/15 text-amber-400 border-amber-500/25' : 'bg-blue-500/15 text-blue-400 border-blue-500/25'}`}>
+                    <span className={`badge ${(teacher.course === 'الأربعين البخارية' || teacher.course === 'الأربعين النووية') ? 'bg-amber-500/15 text-amber-400 border-amber-500/25' : 'bg-blue-500/15 text-blue-400 border-blue-500/25'}`}>
                       {teacher.course || 'المساق الحر'}
                     </span>
                     <span className="badge bg-emerald-500/15 text-emerald-400 border-emerald-500/25">
@@ -222,7 +241,7 @@ export default function AdminTeachersPage() {
                         </div>
                       </td>
                       <td className="px-4 py-3">
-                        <span className={`badge ${teacher.course === 'الأربعين البخارية' ? 'bg-amber-500/15 text-amber-400 border-amber-500/25' : 'bg-blue-500/15 text-blue-400 border-blue-500/25'}`}>
+                        <span className={`badge ${(teacher.course === 'الأربعين البخارية' || teacher.course === 'الأربعين النووية') ? 'bg-amber-500/15 text-amber-400 border-amber-500/25' : 'bg-blue-500/15 text-blue-400 border-blue-500/25'}`}>
                           {teacher.course || 'المساق الحر'}
                         </span>
                       </td>
@@ -242,7 +261,7 @@ export default function AdminTeachersPage() {
                             <Pencil className="w-4 h-4" />
                           </button>
                           <button
-                            onClick={() => handleResetPassword(teacher)}
+                            onClick={() => setResetTarget(teacher)}
                             className="p-1.5 rounded-lg text-gold-400/50 hover:text-gold-400 hover:bg-gold-500/10 transition-all"
                             title="إعادة تعيين كلمة المرور"
                           >
@@ -349,6 +368,16 @@ export default function AdminTeachersPage() {
           </>
         )}
       </AnimatePresence>
+
+      <ConfirmDialog
+        open={!!resetTarget}
+        variant="warning"
+        title="إعادة تعيين كلمة المرور"
+        message={`ستتغير كلمة مرور "${resetTarget?.name}" إلى الاسم الأول + 123. متابعة؟`}
+        confirmText="إعادة التعيين"
+        onConfirm={() => resetTarget && handleResetPassword(resetTarget)}
+        onCancel={() => setResetTarget(null)}
+      />
 
       <ConfirmDialog
         open={!!deleteTarget}
